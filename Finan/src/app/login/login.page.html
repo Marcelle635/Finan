@@ -1,0 +1,33 @@
+<ion-content class="login-container">
+  <!-- Botão X para voltar à Home -->
+  <div class="top-nav">
+    <ion-icon name="close-outline" class="close-icon" routerLink="/home"></ion-icon>
+  </div>
+
+  <div class="form-wrapper">
+    <h1 class="title">ENTRAR</h1>
+
+    <!-- Botão Continue with Google conforme LOGIN.PNG -->
+    <ion-button expand="block" class="btn-google" shape="round">
+      <ion-icon slot="start" name="logo-google"></ion-icon>
+      Continue with Google
+    </ion-button>
+
+    <div class="form-content">
+      <ion-item lines="none" class="line-input">
+        <ion-label position="stacked">E-mail</ion-label>
+        <ion-input type="email" placeholder="Insira seu e-mail"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none" class="line-input">
+        <ion-label position="stacked">Senha</ion-label>
+        <ion-input type="password" placeholder="Insira sua senha"></ion-input>
+      </ion-item>
+
+      <!-- Botão de Entrar (usando a cor vibrante da sua identidade) -->
+      <ion-button expand="block" class="btn-login" shape="round">
+        Entrar
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

@@ -10,13 +10,19 @@
       <h2>Transforme seus planos em realidade, centavo por centavo</h2>
       
       <div class="button-group">
-        <ion-button expand="block" class="btn-purple" shape="round">
-          Cadastre-se
-        </ion-button>
+        <!-- No botão de Cadastre-se da primeira tela -->
+<ion-button 
+  expand="block" 
+  class="btn-purple" 
+  shape="round" 
+  routerLink="/cadastro"> <!-- Adicione esta linha -->
+  Cadastre-se
+</ion-button>
         
-        <ion-button expand="block" fill="solid" class="btn-gray" shape="round">
-          Entrar
-        </ion-button>
+       <!-- Botão de Entrar (agora configurado para ir para LOGIN.PNG) -->
+    <ion-button expand="block" fill="solid" class="btn-gray" shape="round" routerLink="/login">
+      Entrar
+    </ion-button>
       </div>
     </div>
   </div>

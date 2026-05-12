@@ -1,0 +1,68 @@
+.cadastro-container {
+    // O segredo é esta variável aqui embaixo:
+  --background: transparent;
+  // Substitua pelo nome correto da sua imagem de fundo
+  --background: url('../../assets/Logo for Finance App 'DreamFinance'.png') no-repeat center center / cover;
+
+  // Filtro escuro para garantir que os campos fiquem legíveis
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(26, 10, 42, 0.884); // Roxo escuro com transparência
+    z-index: -1;
+  }
+
+  .top-nav {
+    padding: 20px;
+    .close-icon {
+      font-size: 35px;
+      color: #fff;
+      cursor: pointer;
+    }
+  }
+
+  .form-wrapper {
+    padding: 0 40px;
+    text-align: center;
+
+    .title {
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .form-content {
+      .line-input {
+        --background: transparent;
+        --color: #fff;
+        --padding-start: 0;
+        margin-bottom: 25px;
+        border-bottom: 1.5px solid #ffffff; // Linha branca do estilo CADASTRO.PNG
+
+        ion-label {
+          color: #fff !important;
+          font-weight: bold;
+          font-size: 1.1rem;
+          margin-bottom: 5px;
+        }
+
+        ion-input {
+          --placeholder-color: #ffffffb3;
+          --placeholder-opacity: 1;
+        }
+      }
+
+      .btn-cadastre {
+        margin-top: 40px;
+        height: 50px;
+        --background: #B04CDE; // Mantendo o roxo vibrante da identidade
+        --color: #fff;
+        font-weight: 800;
+        text-transform: none;
+      }
+    }
+  }
+}
