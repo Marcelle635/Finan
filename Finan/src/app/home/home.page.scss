@@ -1,27 +1,52 @@
-#container {
-  text-align: center;
 
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+:root {
+  --ion-color-primary: #4a148c; /* Roxo escuro do dr.PNG */
+  --ion-color-secondary: #B04CDE; /* Roxo vibrante dos botões */
+  --ion-background-color: #F9F3FB; /* Fundo claro */
 }
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #F9F3FB; // Cor de fundo da parte clara
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
-}
+  
+  
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
+  .footer-section {
+    flex: 1;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 
-  color: #8c8c8c;
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #000;
+      text-align: left; // Alinhamento conforme a imagem dr_2
+      line-height: 1.5;
+      margin: 0;
+    }
 
-  margin: 0;
-}
+    .button-group {
+      ion-button {
+        height: 45px;
+        margin-bottom: 15px;
+        font-weight: bold;
+        text-transform: none;
 
-#container a {
-  text-decoration: none;
+        &.btn-purple {
+          --background: #B04CDE; // Roxo do botão
+          --color: white;
+        }
+
+        &.btn-gray {
+          --background: #BD8FEB; // Cinza do botão entrar
+          --color: #080808;
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
 }
