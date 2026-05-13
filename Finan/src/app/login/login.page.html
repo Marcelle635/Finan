@@ -1,33 +1,35 @@
-<ion-content class="login-container">
-  <!-- Botão X para voltar à Home -->
-  <div class="top-nav">
-    <ion-icon name="close-outline" class="close-icon" routerLink="/home"></ion-icon>
-  </div>
+<ion-content>
+  <div class="background-wrapper">
+    <div class="overlay">
+      
+      <div class="login-card">
+        <h1>ENTRAR</h1>
 
-  <div class="form-wrapper">
-    <h1 class="title">ENTRAR</h1>
+        <!-- Botão Google -->
+        <div class="google-auth-container">
+          <button class="google-btn" (click)="loginComGoogle()">
+            <img src="assets/icon-google.png" alt="Google Icon">
+            Continue with Google
+          </button>
+        </div>
 
-    <!-- Botão Continue with Google conforme LOGIN.PNG -->
-    <ion-button expand="block" class="btn-google" shape="round">
-      <ion-icon slot="start" name="logo-google"></ion-icon>
-      Continue with Google
-    </ion-button>
+        <div class="form-container">
+          <ion-item lines="none" class="custom-input">
+            <ion-label position="stacked">E-mail</ion-label>
+            <ion-input type="email" [(ngModel)]="usuario.email"></ion-input>
+          </ion-item>
 
-    <div class="form-content">
-      <ion-item lines="none" class="line-input">
-        <ion-label position="stacked">E-mail</ion-label>
-        <ion-input type="email" placeholder="Insira seu e-mail"></ion-input>
-      </ion-item>
+          <ion-item lines="none" class="custom-input">
+            <ion-label position="stacked">Senha</ion-label>
+          <ion-input type="password" [(ngModel)]="usuario.senha"></ion-input>
+          </ion-item>
+        </div>
 
-      <ion-item lines="none" class="line-input">
-        <ion-label position="stacked">Senha</ion-label>
-        <ion-input type="password" placeholder="Insira sua senha"></ion-input>
-      </ion-item>
+        <ion-button expand="block" (click)="realizarLogin()" class="btn-entrar">
+          Entrar
+        </ion-button>
+      </div>
 
-      <!-- Botão de Entrar (usando a cor vibrante da sua identidade) -->
-      <ion-button expand="block" class="btn-login" shape="round">
-        Entrar
-      </ion-button>
     </div>
   </div>
 </ion-content>

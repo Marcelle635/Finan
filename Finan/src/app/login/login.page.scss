@@ -1,81 +1,91 @@
-.login-container {
-  // Ajuste o caminho para a sua imagem de fundo
-  --background: url('/assets/Logo for Finance App 'DreamFinance'.png') no-repeat center center / cover !important;
-  --display: block;
+ion-content {
+  --background: #0a0e14;
+}
 
-  .top-nav {
-    padding: 20px;
-    .close-icon {
-      font-size: 35px;
-      color: #fff;
-      cursor: pointer;
+.background-wrapper {
+  // Substitua pelo caminho da sua imagem de ícones tecnológicos
+  background: url('../../assets/pagina.png') no-repeat center center / cover;
+  height: 100%;
+  width: 100%;
+}
+
+.overlay {
+  background: rgba(0, 0, 0, 0.85); // Tom escuro profundo para destacar o conteúdo
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 40px 25px;
+  border: 1.5px solid #ffffff; // Borda fina branca ao redor do card
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.5); // Fundo translúcido
+  text-align: center;
+
+  h1 {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 35px;
+    letter-spacing: 1px;
+  }
+}
+
+// Botão estilo Google
+.google-auth-container {
+  margin-bottom: 50px;
+  
+  .google-btn {
+    background: #5d5d5d; // Tom de cinza da imagem
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    gap: 10px;
+    cursor: pointer;
+
+    img {
+      width: 20px;
     }
   }
+}
 
-  .form-wrapper {
-    padding: 0 40px;
-    text-align: center;
-    position: relative;
-    z-index: 1;
+.form-container {
+  margin-bottom: 40px;
+  text-align: left;
 
-    .title {
-      color: #fff;
-      font-size: 2.2rem;
-      font-weight: 800;
-      margin-bottom: 30px;
-    }
+  .custom-input {
+    --background: transparent;
+    --color: #fff;
+    --padding-start: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #fff; // Linha branca característica
 
-    .btn-google {
-      --background: #444; // Cor cinza escuro conforme LOGIN.PNG
-      --color: #fff;
-      --border-radius: 12px;
-      margin-bottom: 40px;
-      height: 50px;
-      text-transform: none;
-      font-weight: 500;
-
-      ion-icon {
-        font-size: 20px;
-      }
-    }
-
-    .form-content {
-      .line-input {
-        --background: transparent;
-        --color: #fff;
-        --padding-start: 0;
-        margin-bottom: 25px;
-        border-bottom: 1.5px solid #ffffff; // Linha branca do estilo LOGIN.PNG
-
-        ion-label {
-          color: #fff !important;
-          font-weight: bold;
-          font-size: 1.1rem;
-          margin-bottom: 5px;
-        }
-
-        ion-input {
-          --placeholder-color: #ffffffb3;
-        }
-      }
-
-      .btn-login {
-        margin-top: 40px;
-        height: 50px;
-        --background: #B04CDE; // Mantendo o seu roxo vibrante
-        --color: #fff;
-        font-weight: 800;
-        text-transform: none;
-      }
+    ion-label {
+      color: #fff !important;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 5px;
     }
   }
+}
 
-  // Camada escura para facilitar a leitura
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(93, 47, 107, 0.7);
-    z-index: 0;
-  }
+.btn-entrar {
+  --background: #41969e; // Cor verde-água (Teal) do botão
+  --color: #fff;
+  --border-radius: 12px;
+  font-weight: bold;
+  height: 55px;
+  font-size: 18px;
+  margin-top: 10px;
 }

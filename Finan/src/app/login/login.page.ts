@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router'; // Importação necessária para o navigate
+import { Router } from '@angular/router'; 
 import { 
   IonHeader, 
   IonToolbar, 
@@ -13,15 +13,16 @@ import {
   IonButton, 
   IonIcon,
   ToastController 
-} from '@ionic/angular/standalone'; // Correção para o erro errr.PNG
+} from '@ionic/angular/standalone'; 
 
 import { AuthService } from '../services/auth';
 import { addIcons } from 'ionicons';
-import { mailOutline, lockClosedOutline } from 'ionicons/icons';
+import { mailOutline, lockClosedOutline, logoGoogle } from 'ionicons/icons';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
+  styleUrls: ['./login.page.scss'], 
   standalone: true,
   imports: [
     CommonModule, 
@@ -42,20 +43,34 @@ export class LoginPage {
   private router = inject(Router);
   private toastCtrl = inject(ToastController);
 
-  // Solução para err_2.PNG: Declarar o objeto 'usuario'
+  // Mantenha o objeto usuario para evitar o erro err_3.PNG
+  // No HTML use [(ngModel)]="usuario.email"
   usuario = {
     email: '',
     senha: ''
   };
 
   constructor() {
-    // Registro de ícones para evitar o erro err.PNG
-    addIcons({ mailOutline, lockClosedOutline });
+    addIcons({ mailOutline, lockClosedOutline, logoGoogle });
   }
 
-  async onLogin() {
+  async loginComGoogle() {
     try {
-      // Solução para errr_3.PNG: Passar os dois argumentos do objeto
+      await this.exibirToast('Login social em desenvolvimento!', 'secondary');
+    } catch (error) {
+      this.exibirToast('Erro ao conectar com Google.', 'danger');
+    }
+  }
+
+  // RENOMEADO PARA realizarLogin() para resolver o erro errr_5.PNG
+  async realizarLogin() {
+    if (!this.usuario.email || !this.usuario.senha) {
+      await this.exibirToast('Por favor, preencha todos os campos.', 'warning');
+      return;
+    }
+
+    try {
+      // Passando os argumentos corretamente para resolver errr_3.PNG
       await this.authService.login(this.usuario.email, this.usuario.senha);
       
       await this.exibirToast('Bem-vindo!', 'success');
@@ -69,6 +84,7 @@ export class LoginPage {
     let mensagem = 'Erro ao realizar login.';
     if (codigo === 'auth/invalid-credential') mensagem = 'E-mail ou senha incorretos.';
     if (codigo === 'auth/invalid-email') mensagem = 'E-mail inválido.';
+    if (codigo === 'auth/user-not-found') mensagem = 'Usuário não encontrado.';
     
     await this.exibirToast(mensagem, 'danger');
   }
