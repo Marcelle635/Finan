@@ -1,68 +1,74 @@
+// Remove o padding padrão do ion-content para a imagem ocupar tudo
+ion-content {
+  --background: none;
+  background-color: #0a0e14;
+}
+
+.background-image {
+  background: url('../../assets/pagina.png') no-repeat center center / cover;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.overlay {
+  background: rgba(0, 0, 0, 0.7); // Deixa a imagem de fundo mais escura
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
 .cadastro-container {
-    // O segredo é esta variável aqui embaixo:
-  --background: transparent;
-  // Substitua pelo nome correto da sua imagem de fundo
-  --background: url('../../assets/Logo for Finance App 'DreamFinance'.png') no-repeat center center / cover;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 20px;
+  border: 2px solid #ffffff; // Borda branca fina da imagem
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.4); // Fundo semi-transparente do card
+  text-align: center;
 
-  // Filtro escuro para garantir que os campos fiquem legíveis
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(26, 10, 42, 0.884); // Roxo escuro com transparência
-    z-index: -1;
+  h1 {
+    color: white;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
   }
+}
 
-  .top-nav {
-    padding: 20px;
-    .close-icon {
-      font-size: 35px;
-      color: #fff;
-      cursor: pointer;
+.input-group {
+  margin-bottom: 30px;
+
+  ion-item {
+    --background: transparent;
+    --color: white;
+    --placeholder-color: #ccc;
+    --padding-start: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid white; // Linha branca embaixo dos inputs
+
+    ion-label {
+      color: white !important;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    ion-input {
+      --padding-top: 0;
+      font-size: 16px;
     }
   }
+}
 
-  .form-wrapper {
-    padding: 0 40px;
-    text-align: center;
-
-    .title {
-      color: #fff;
-      font-size: 2.2rem;
-      font-weight: 800;
-      margin-bottom: 40px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-
-    .form-content {
-      .line-input {
-        --background: transparent;
-        --color: #fff;
-        --padding-start: 0;
-        margin-bottom: 25px;
-        border-bottom: 1.5px solid #ffffff; // Linha branca do estilo CADASTRO.PNG
-
-        ion-label {
-          color: #fff !important;
-          font-weight: bold;
-          font-size: 1.1rem;
-          margin-bottom: 5px;
-        }
-
-        ion-input {
-          --placeholder-color: #ffffffb3;
-          --placeholder-opacity: 1;
-        }
-      }
-
-      .btn-cadastre {
-        margin-top: 40px;
-        height: 50px;
-        --background: #B04CDE; // Mantendo o roxo vibrante da identidade
-        --color: #fff;
-        font-weight: 800;
-        text-transform: none;
-      }
-    }
-  }
+.btn-cadastrar {
+  --background: #41969e; // Cor verde-água do botão da imagem
+  --background-activated: #357a81;
+  --border-radius: 12px;
+  --color: white;
+  font-weight: bold;
+  height: 50px;
+  margin-top: 20px;
+  text-transform: none; // Evita que o texto fique todo em maiúsculo
 }

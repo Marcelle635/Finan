@@ -1,36 +1,37 @@
-<ion-content class="cadastro-container">
-  <!-- Botão X para voltar à Home -->
-  <div class="top-nav">
-    <ion-icon name="close-outline" class="close-icon" routerLink="/home"></ion-icon>
-  </div>
+<ion-content>
+  <div class="background-image">
+    <div class="overlay">
+      
+      <div class="cadastro-container">
+        <h1>CADASTRO</h1>
 
-  <div class="form-wrapper">
-    <h1 class="title">CADASTRO</h1>
+        <div class="input-group">
+          <ion-item lines="none">
+            <ion-label position="stacked">Nome</ion-label>
+            <ion-input type="text" [(ngModel)]="usuario.nome"></ion-input>
+          </ion-item>
 
-    <div class="form-content">
-      <ion-item lines="none" class="line-input">
-        <ion-label position="stacked">Nome</ion-label>
-        <ion-input type="text" placeholder="Insira seu nome"></ion-input>
-      </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">E-mail</ion-label>
+            <ion-input type="email" [(ngModel)]="usuario.email"></ion-input>
+          </ion-item>
 
-      <ion-item lines="none" class="line-input">
-        <ion-label position="stacked">E-mail</ion-label>
-        <ion-input type="email" placeholder="Insira seu e-mail"></ion-input>
-      </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Senha</ion-label>
+            <ion-input type="password" [(ngModel)]="usuario.senha"></ion-input>
+          </ion-item>
 
-      <ion-item lines="none" class="line-input">
-        <ion-label position="stacked">Senha</ion-label>
-        <ion-input type="password" placeholder="Insira sua senha"></ion-input>
-      </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Confirmar senha</ion-label>
+            <ion-input type="password" [(ngModel)]="confirmarSenha"></ion-input>
+          </ion-item>
+        </div>
 
-      <ion-item lines="none" class="line-input">
-        <ion-label position="stacked">Confirmar senha</ion-label>
-        <ion-input type="password" placeholder="Confirme sua senha"></ion-input>
-      </ion-item>
+        <ion-button expand="block" (click)="realizarCadastro()" class="btn-cadastrar">
+          Cadastre-se
+        </ion-button>
+      </div>
 
-      <ion-button expand="block" class="btn-cadastre" shape="round">
-        Cadastre-se
-      </ion-button>
     </div>
   </div>
 </ion-content>
