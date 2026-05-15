@@ -3,9 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router'; 
 import { 
-  IonHeader, 
-  IonToolbar, 
-  IonTitle, 
   IonContent, 
   IonItem, 
   IonLabel, 
@@ -27,9 +24,6 @@ import { mailOutline, lockClosedOutline, logoGoogle } from 'ionicons/icons';
   imports: [
     CommonModule, 
     FormsModule, 
-    IonHeader, 
-    IonToolbar, 
-    IonTitle, 
     IonContent, 
     IonItem, 
     IonLabel, 
@@ -43,8 +37,6 @@ export class LoginPage {
   private router = inject(Router);
   private toastCtrl = inject(ToastController);
 
-  // Mantenha o objeto usuario para evitar o erro err_3.PNG
-  // No HTML use [(ngModel)]="usuario.email"
   usuario = {
     email: '',
     senha: ''
@@ -54,15 +46,6 @@ export class LoginPage {
     addIcons({ mailOutline, lockClosedOutline, logoGoogle });
   }
 
-  async loginComGoogle() {
-    try {
-      await this.exibirToast('Login social em desenvolvimento!', 'secondary');
-    } catch (error) {
-      this.exibirToast('Erro ao conectar com Google.', 'danger');
-    }
-  }
-
-  // RENOMEADO PARA realizarLogin() para resolver o erro errr_5.PNG
   async realizarLogin() {
     if (!this.usuario.email || !this.usuario.senha) {
       await this.exibirToast('Por favor, preencha todos os campos.', 'warning');
@@ -70,22 +53,25 @@ export class LoginPage {
     }
 
     try {
-      // Passando os argumentos corretamente para resolver errr_3.PNG
       await this.authService.login(this.usuario.email, this.usuario.senha);
       
       await this.exibirToast('Bem-vindo!', 'success');
-      this.router.navigate(['/home']);
+      
+      // REDIRECIONA PARA /CASA (conforme seu novo componente)
+      this.router.navigate(['/casa']);
     } catch (error: any) {
       this.tratarErro(error.code);
     }
   }
 
+  async loginComGoogle() {
+    await this.exibirToast('Login social em desenvolvimento!', 'secondary');
+  }
+
   private async tratarErro(codigo: string) {
     let mensagem = 'Erro ao realizar login.';
     if (codigo === 'auth/invalid-credential') mensagem = 'E-mail ou senha incorretos.';
-    if (codigo === 'auth/invalid-email') mensagem = 'E-mail inválido.';
     if (codigo === 'auth/user-not-found') mensagem = 'Usuário não encontrado.';
-    
     await this.exibirToast(mensagem, 'danger');
   }
 

@@ -1,0 +1,85 @@
+.header-purple {
+  background: #a349d5;
+  color: white;
+  padding: 20px;
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+
+  .user-info {
+    --background: transparent;
+    --color: white;
+    padding: 0;
+    h1 { font-weight: bold; margin-top: 4px; }
+  }
+
+  .saldo-container {
+    margin-top: 15px;
+    padding-left: 10px;
+    .saldo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2em;
+    }
+  }
+}
+
+.date-selector {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #e0e0e0;
+  margin: 15px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  h2 { font-size: 1.2em; font-weight: bold; }
+}
+
+.filter-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  button {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background: #e0e0e0;
+    &.active { background: #a349d5; color: white; }
+  }
+}
+
+.total-card {
+  background: #e0e0e0;
+  border-radius: 15px;
+  margin: 10px 20px;
+  .wallet-icon { font-size: 2em; color: #a349d5; }
+}
+
+.item-card {
+  background: #e0e0e0;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    .valor { color: #a349d5; }
+  }
+  .btn-pago {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #a349d5;
+    color: white;
+  }
+}

@@ -1,0 +1,94 @@
+<ion-header class="ion-no-border">
+  <div class="header-purple">
+    <ion-item lines="none" class="user-info">
+      <ion-avatar slot="start">
+        <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
+      </ion-avatar>
+      <ion-label>
+        <p>Bem vindo(a)</p>
+        <h1>{{ nomeUsuario }}</h1>
+      </ion-label>
+      <ion-icon name="settings-outline" slot="end" color="light"></ion-icon>
+    </ion-item>
+    
+    <div class="saldo-container">
+      <p>Saldo geral</p>
+      <div class="saldo-row">
+        <span>********</span>
+        <ion-icon name="eye-off-outline"></ion-icon>
+      </div>
+    </div>
+  </div>
+</ion-header>
+
+<ion-content>
+  <div class="date-selector">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+    <span>Janeiro de 2026</span>
+    <ion-icon name="chevron-forward-outline"></ion-icon>
+  </div>
+
+  <div class="section-title">
+    <h2>Contas</h2>
+    <ion-fab-button size="small" color="secondary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-options">
+      <button (click)="filtrar('pago')" [class.active]="filtroAtivo === 'pago'">Pago</button>
+      <button (click)="filtrar('pendente')" [class.active]="filtroAtivo === 'pendente'">Pendente</button>
+      <button (click)="filtrar('vencido')" [class.active]="filtroAtivo === 'vencido'">Vencido</button>
+    </div>
+  </div>
+
+  <ion-card class="total-card">
+    <ion-item lines="none">
+      <ion-icon name="wallet-outline" slot="start" class="wallet-icon"></ion-icon>
+      <ion-label>
+        <p>Total de gastos</p>
+        <h3>{{ totalGastos | currency:'BRL' }}</h3>
+      </ion-label>
+    </ion-item>
+  </ion-card>
+
+  <div class="list-container">
+    <ion-card *ngFor="let conta of contasFiltradas" class="item-card">
+      <ion-card-content>
+        <div class="card-header">
+          <span class="titulo">{{ conta.titulo }}</span>
+          <span class="valor">{{ conta.valor | currency:'BRL' }}</span>
+        </div>
+        <p class="vencimento">Vencimento: {{ conta.vencimento }}</p>
+        
+        <button class="btn-pago" *ngIf="conta.status !== 'pago'" (click)="marcarComoPago(conta.id)">
+          Marcar como pago
+        </button>
+      </ion-card-content>
+    </ion-card>
+
+    <p class="empty-msg" *ngIf="contasFiltradas.length === 0">Nenhuma conta encontrada.</p>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="casa">
+      <ion-icon name="home-outline"></ion-icon>
+      <ion-label>Home</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="entradas">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <ion-label>Entradas</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="grafico">
+      <ion-icon name="trending-up-outline"></ion-icon>
+      <ion-label>Gráfico</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="desejos">
+      <ion-icon name="heart-outline"></ion-icon>
+      <ion-label>Desejos</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>

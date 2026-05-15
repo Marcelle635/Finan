@@ -1,12 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { 
   Auth, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  signOut, 
-  authState 
+  signOut 
 } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -16,23 +14,16 @@ export class AuthService {
 
   constructor() {}
 
-  // Monitora o status do usuário
-  getUsuarioLogado(): Observable<any> {
-    return authState(this.auth);
+  async cadastrar(email: string, senha: string) {
+    // O segredo é o await aqui para esperar o Firebase responder
+    return await createUserWithEmailAndPassword(this.auth, email, senha);
   }
 
-  // Cadastro de Novos Usuários
-  async cadastrar(email: string, pass: string) {
-    return createUserWithEmailAndPassword(this.auth, email, pass);
+  async login(email: string, senha: string) {
+    return await signInWithEmailAndPassword(this.auth, email, senha);
   }
 
-  // Login
-  async login(email: string, pass: string) {
-    return signInWithEmailAndPassword(this.auth, email, pass);
-  }
-
-  // Logout
-  logout() {
-    return signOut(this.auth);
+  async logout() {
+    return await signOut(this.auth);
   }
 }
