@@ -30,18 +30,18 @@
 
   <div class="section-title">
     <h2>Contas</h2>
-    <ion-fab-button size="small" color="secondary">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
+    <ion-fab-button size="small" class="btn-adicionar">
+  <ion-icon name="add"></ion-icon>
+</ion-fab-button>
   </div>
 
   <div class="filter-bar">
-    <div class="filter-options">
-      <button (click)="filtrar('pago')" [class.active]="filtroAtivo === 'pago'">Pago</button>
-      <button (click)="filtrar('pendente')" [class.active]="filtroAtivo === 'pendente'">Pendente</button>
-      <button (click)="filtrar('vencido')" [class.active]="filtroAtivo === 'vencido'">Vencido</button>
-    </div>
+  <div class="filter-options">
+    <button (click)="filtrar('pago')" [class.active]="filtroAtivo === 'pago'">Pago</button>
+    <button (click)="filtrar('pendente')" [class.active]="filtroAtivo === 'pendente'">Pendente</button>
+    <button (click)="filtrar('vencido')" [class.active]="filtroAtivo === 'vencido'">Vencido</button>
   </div>
+</div>
 
   <ion-card class="total-card">
     <ion-item lines="none">
