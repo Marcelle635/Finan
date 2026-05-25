@@ -30,18 +30,18 @@
 
   <div class="section-title">
     <h2>Contas</h2>
-    <ion-fab-button size="small" class="btn-adicionar">
-  <ion-icon name="add"></ion-icon>
-</ion-fab-button>
+    <ion-fab-button size="small" class="btn-adicionar" (click)="abrirModal(true)">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
   </div>
 
   <div class="filter-bar">
-  <div class="filter-options">
-    <button (click)="filtrar('pago')" [class.active]="filtroAtivo === 'pago'">Pago</button>
-    <button (click)="filtrar('pendente')" [class.active]="filtroAtivo === 'pendente'">Pendente</button>
-    <button (click)="filtrar('vencido')" [class.active]="filtroAtivo === 'vencido'">Vencido</button>
+    <div class="filter-options">
+      <button (click)="filtrar('pago')" [class.active]="filtroAtivo === 'pago'">Pago</button>
+      <button (click)="filtrar('pendente')" [class.active]="filtroAtivo === 'pendente'">Pendente</button>
+      <button (click)="filtrar('vencido')" [class.active]="filtroAtivo === 'vencido'">Vencido</button>
+    </div>
   </div>
-</div>
 
   <ion-card class="total-card">
     <ion-item lines="none">
@@ -60,16 +60,49 @@
           <span class="titulo">{{ conta.titulo }}</span>
           <span class="valor">{{ conta.valor | currency:'BRL' }}</span>
         </div>
-        <p class="vencimento">Vencimento: {{ conta.vencimento }}</p>
+        <p class="vencimento" *ngIf="conta.status !== 'pago'">Vencimento: {{ conta.vencimento }}</p>
         
         <button class="btn-pago" *ngIf="conta.status !== 'pago'" (click)="marcarComoPago(conta.id)">
           Marcar como pago
+        </button>
+        <button class="btn-pago btn-limpar" *ngIf="conta.status === 'pago'" (click)="excluirConta(conta.id)">
+          Limpar
         </button>
       </ion-card-content>
     </ion-card>
 
     <p class="empty-msg" *ngIf="contasFiltradas.length === 0">Nenhuma conta encontrada.</p>
   </div>
+
+  <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)">
+    <ng-template>
+      <div class="modal-wrapper">
+        <div class="modal-header">
+          <h2>Novo Gasto</h2>
+          <button class="btn-fechar" (click)="abrirModal(false)">X</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="input-group">
+            <label>Nome</label>
+            <input type="text" placeholder="Ex: Aluguel" [(ngModel)]="novaConta.titulo">
+          </div>
+
+          <div class="input-group">
+            <label>Valor</label>
+            <input type="number" placeholder="0.00" [(ngModel)]="novaConta.valor">
+          </div>
+
+          <div class="input-group">
+            <label>Vencimento</label>
+            <input type="date" [(ngModel)]="novaConta.vencimento">
+          </div>
+
+          <button class="btn-adicionar-gasto" (click)="adicionarGasto()">Adicionar</button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>
 
 <ion-footer class="ion-no-border">

@@ -141,3 +141,83 @@ ion-tab-bar {
     }
   }
 }
+
+// Customização do Modal (Formulário Adicionar)
+ion-modal {
+  --background: rgba(0, 0, 0, 0.4); // Efeito de escurecer o fundo da tela
+
+  .modal-wrapper {
+    background: #dbdbdb; // Fundo cinza do container
+    border-radius: 20px;
+    margin: auto 25px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      
+      h2 {
+        margin: 0;
+        font-weight: bold;
+        font-size: 1.3em;
+        text-align: center;
+        flex: 1;
+        color: #000;
+      }
+
+      .btn-fechar {
+        background: transparent;
+        border: none;
+        font-weight: bold;
+        font-size: 1.2em;
+        color: #666;
+        cursor: pointer;
+      }
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        label {
+          font-weight: bold;
+          color: #000;
+        }
+
+        input {
+          background: #e6e6e6;
+          border: none;
+          padding: 12px;
+          border-radius: 10px;
+          color: #000;
+          font-size: 1em;
+
+          &::placeholder {
+            color: #bfa5d6; // Roxo clarinho nos placeholders
+          }
+        }
+      }
+
+      .btn-adicionar-gasto {
+        background: #a349d5;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-top: 10px;
+        width: 100%;
+      }
+    }
+  }
+}
