@@ -23,9 +23,17 @@
 
 <ion-content>
   <div class="date-selector">
-    <ion-icon name="chevron-back-outline"></ion-icon>
-    <span>Janeiro de 2026</span>
-    <ion-icon name="chevron-forward-outline"></ion-icon>
+    <div class="date-header">
+      <ion-icon name="chevron-back-outline" (click)="mudarMes(-1)"></ion-icon>
+      <span class="mes-titulo">{{ textoMesAno }}</span>
+      <ion-icon name="chevron-forward-outline" (click)="mudarMes(1)"></ion-icon>
+    </div>
+
+    <div class="date-details">
+      <div class="detail-item">De {{ dataInicioMes }}</div>
+      <div class="detail-item">Até {{ dataFimMes }}</div>
+      <div class="detail-item status-mes">{{ statusMesTexto }}</div>
+    </div>
   </div>
 
   <div class="section-title">

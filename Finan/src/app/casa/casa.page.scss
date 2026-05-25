@@ -30,13 +30,55 @@
 }
 
 .date-selector {
+  background: #dbdbdb; // Cinza igual ao dos filtros
+  margin: 15px 20px;
+  padding: 15px;
+  border-radius: 25px; // Pontas bem arredondadas estilo pílula grande
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background: #e0e0e0;
-  margin: 15px;
-  padding: 10px;
-  border-radius: 10px;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+  .date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+
+    ion-icon {
+      font-size: 1.4em;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .mes-titulo {
+      font-size: 1em;
+      font-weight: bold;
+      color: #000;
+    }
+  }
+
+  .date-details {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+
+    .detail-item {
+      font-size: 0.90em;
+      color: #757575; // Cinza médio para os textos secundários
+      font-weight: bold;
+      flex: 1;
+      text-align: center;
+
+      &:first-child { text-align: left; }
+      &:last-child { text-align: right; }
+    }
+
+    .status-mes {
+      color: #666666; // Destaque sutil para o "Mês Atual"
+    }
+  }
 }
 
 .section-title {
