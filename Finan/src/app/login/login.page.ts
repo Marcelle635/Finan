@@ -64,9 +64,27 @@ export class LoginPage {
     }
   }
 
-  async loginComGoogle() {
-    await this.exibirToast('Login social em desenvolvimento!', 'secondary');
+ 
+async loginComGoogle() {
+  try {
+    
+    await this.authService.loginComGoogle();
+    
+    await this.exibirToast('Bem-vindo com o Google!', 'success');
+    
+    // Redireciona para a tela principal do Finan
+    this.router.navigate(['/casa']);
+  } catch (error: any) {
+    console.error(error);
+    
+    // Evita erro "feio" caso o usuário mude de ideia e feche a janela do Google
+    if (error.code === 'auth/popup-closed-by-user') {
+      await this.exibirToast('Login cancelado.', 'warning');
+    } else {
+      await this.exibirToast('Erro ao logar com o Google.', 'danger');
+    }
   }
+}
 
   private async tratarErro(codigo: string) {
     let mensagem = 'Erro ao realizar login.';
