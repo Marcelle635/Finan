@@ -1,16 +1,59 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular'; // ESSENCIAL
+import { 
+  IonContent, 
+  IonHeader, 
+  IonItem, 
+  IonLabel, 
+  IonIcon, 
+  IonAvatar, 
+  IonFabButton, 
+  IonCard, 
+  IonCardContent, 
+  IonFooter, 
+  IonTabBar, 
+  IonTabButton 
+} from '@ionic/angular/standalone'; // 👈 Mudamos para os componentes específicos
 import { ContasService } from '../services/contas.service';
 import { Conta } from '../models/conta.model';
+
+// 👇 Importações cruciais para os ícones funcionarem
+import { addIcons } from 'ionicons';
+import { 
+  settingsOutline, 
+  eyeOffOutline, 
+  chevronBackOutline, 
+  chevronForwardOutline, 
+  add, 
+  walletOutline, 
+  homeOutline, 
+  trendingUpOutline, 
+  heartOutline 
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-casa',
   templateUrl: './casa.page.html',
   styleUrls: ['./casa.page.scss'],
-  standalone: true, // Isso substitui a necessidade do .module.ts
-  imports: [IonicModule, CommonModule, FormsModule] // IMPORTANTE: IonicModule precisa estar aqui
+  standalone: true, 
+  imports: [
+    CommonModule, 
+    FormsModule,
+    // 👇 Declaramos apenas os componentes do Ionic que seu HTML realmente usa
+    IonContent, 
+    IonHeader, 
+    IonItem, 
+    IonLabel, 
+    IonIcon, 
+    IonAvatar, 
+    IonFabButton, 
+    IonCard, 
+    IonCardContent, 
+    IonFooter, 
+    IonTabBar, 
+    IonTabButton
+  ] 
 })
 export class CasaPage implements OnInit {
   nomeUsuario: string = '';
@@ -19,7 +62,20 @@ export class CasaPage implements OnInit {
   filtroAtivo: 'pago' | 'pendente' | 'vencido' = 'pendente';
   totalGastos: number = 0;
 
-  constructor(private contasService: ContasService) {}
+  constructor(private contasService: ContasService) {
+    // 👇 Registra os ícones no construtor da página
+    addIcons({ 
+      settingsOutline, 
+      eyeOffOutline, 
+      chevronBackOutline, 
+      chevronForwardOutline, 
+      add, 
+      walletOutline, 
+      homeOutline, 
+      trendingUpOutline, 
+      heartOutline 
+    });
+  }
 
   ngOnInit() {
     this.carregarDados();
