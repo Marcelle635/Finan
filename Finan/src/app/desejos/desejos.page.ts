@@ -18,6 +18,7 @@ import {
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
 import { 
+  settings, // Adicionado para garantir o funcionamento correto com a rota ativa
   settingsOutline, 
   eyeOffOutline, 
   chevronBackOutline, 
@@ -83,6 +84,7 @@ export class DesejosPage implements OnInit {
 
   constructor(private contasService: ContasService) {
     addIcons({ 
+      settings,
       settingsOutline, 
       eyeOffOutline, 
       chevronBackOutline, 

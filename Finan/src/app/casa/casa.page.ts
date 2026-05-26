@@ -22,6 +22,7 @@ import { ContasService } from '../services/contas.service';
 import { Conta } from '../models/conta.model';
 import { addIcons } from 'ionicons';
 import { 
+  settings, // Adicionado para suportar a navegação ativa no cabeçalho
   settingsOutline, 
   eyeOffOutline, 
   chevronBackOutline, 
@@ -87,6 +88,7 @@ export class CasaPage implements OnInit {
   constructor(private contasService: ContasService) {
     // Registro dos ícones do Ionicons
     addIcons({ 
+      settings,
       settingsOutline, 
       eyeOffOutline, 
       chevronBackOutline, 

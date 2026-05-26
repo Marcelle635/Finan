@@ -15,6 +15,7 @@ import {
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
 import { 
+  settings, // Adicionado para suportar o roteamento ativo da engrenagem
   settingsOutline, 
   eyeOffOutline, 
   chevronBackOutline, 
@@ -58,6 +59,7 @@ export class GraficoPage implements OnInit {
 
   constructor(private contasService: ContasService) {
     addIcons({ 
+      settings,
       settingsOutline, 
       eyeOffOutline, 
       chevronBackOutline, 
@@ -70,14 +72,26 @@ export class GraficoPage implements OnInit {
   }
 
   ngOnInit() {
+    this.carregarDados();
+  }
+
+  // Recarrega o nome e a foto do localStorage caso mude de tela
+  ionViewWillEnter() {
+    this.carregarDados();
+  }
+
+  carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
+    this.fotoUsuario = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
   }
 
   mudarAno(direcao: number) {
     // Função para navegação do cabeçalho de datas
   }
 
-  // Define dinamicamente a altura máxima proporcional para o gráfico de barras (máximo de 140px de altura)
+  /**
+   * Define dinamicamente a altura máxima proporcional para o gráfico de barras (máximo de 140px de altura)
+   */
   calcularAlturaBarra(gasto: number): number {
     const maiorGasto = Math.max(...this.dadosMeses.map(m => m.gastos));
     const alturaMaximaPx = 140; 

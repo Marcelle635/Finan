@@ -20,6 +20,7 @@ import {
 import { ContasService } from '../services/contas.service'; // 1. IMPORTAÇÃO DO SEU SERVIÇO
 import { addIcons } from 'ionicons';
 import { 
+  settings, // Adicionado para garantir o funcionamento correto com a rota ativa
   settingsOutline, 
   eyeOffOutline, 
   chevronBackOutline, 
@@ -61,9 +62,10 @@ export class EntradasPage implements OnInit {
   nomeUsuario: string = '';
   fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
   
-  totalEntradas: number = 5000.00;
+  totalEntradas: number = 0;
   isModalAberto: boolean = false;
 
+  // Dados iniciais com base nas listagens do app
   entradasFiltradas: any[] = [
     { id: 1, titulo: 'Salário', categoria: 'Salário', valor: 1000.00 },
     { id: 2, titulo: 'Salário', categoria: 'Salário', valor: 4000.00 }
@@ -85,6 +87,7 @@ export class EntradasPage implements OnInit {
   // 2. INJEÇÃO DO SERVIÇO NO CONSTRUTOR
   constructor(private contasService: ContasService) {
     addIcons({ 
+      settings,
       settingsOutline, 
       eyeOffOutline, 
       chevronBackOutline, 
@@ -101,6 +104,7 @@ export class EntradasPage implements OnInit {
   ngOnInit() {
     this.inicializarSeletorData();
     this.carregarDados(); // Carrega ao iniciar
+    this.calcularTotalEntradas(); // Calcula a soma inicial das entradas
   }
 
   // Garante que atualiza o nome mesmo se trocar de usuário sem recarregar o app
@@ -149,6 +153,13 @@ export class EntradasPage implements OnInit {
     }
   }
 
+  /**
+   * Calcula dinamicamente o somatório de todas as entradas na lista
+   */
+  calcularTotalEntradas() {
+    this.totalEntradas = this.entradasFiltradas.reduce((acc, entrada) => acc + entrada.valor, 0);
+  }
+
   adicionarEntrada() {
     if (!this.novaEntrada.titulo || !this.novaEntrada.valor) {
       alert('Preencha os campos obrigatórios!');
@@ -162,15 +173,12 @@ export class EntradasPage implements OnInit {
       valor: Number(this.novaEntrada.valor)
     });
 
-    this.totalEntradas += Number(this.novaEntrada.valor);
+    this.calcularTotalEntradas(); // Recalcula o saldo total geral de entradas
     this.abrirModal(false);
   }
 
   excluirEntrada(id: number) {
-    const index = this.entradasFiltradas.findIndex(e => e.id === id);
-    if (index !== -1) {
-      this.totalEntradas -= this.entradasFiltradas[index].valor;
-      this.entradasFiltradas = this.entradasFiltradas.filter(e => e.id !== id);
-    }
+    this.entradasFiltradas = this.entradasFiltradas.filter(e => e.id !== id);
+    this.calcularTotalEntradas(); // Recalcula diminuindo o item excluído
   }
 }

@@ -1,0 +1,39 @@
+<ion-header class="ion-no-border">
+  <div class="header-purple">
+    <ion-item lines="none" class="user-info">
+      <ion-avatar slot="start">
+        <img [src]="fotoUsuario" alt="Foto de perfil" />
+      </ion-avatar>
+
+      <ion-label>
+        <p class="texto-boas-vindas">Bem vindo(a)</p>
+        <h1>{{ nomeUsuario }}</h1>
+      </ion-label>
+      <ion-icon name="settings" slot="end" color="light"></ion-icon>
+    </ion-item>
+  </div>
+</ion-header>
+
+<ion-content>
+  <div class="config-container">
+    <h2>Configurações</h2>
+
+    <ion-list lines="none" class="options-list">
+      <ion-item detail="true" detailIcon="chevron-forward-outline" class="config-item" (click)="irParaNotificacoes()">
+        <ion-icon name="notifications-outline" slot="start"></ion-icon>
+        <ion-label>Notificação</ion-label>
+      </ion-item>
+
+      <ion-item detail="true" detailIcon="chevron-forward-outline" class="config-item" (click)="irParaAlterarSenha()">
+        <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+        <ion-label>Alterar senha</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <hr class="divisor-config">
+
+    <div class="logout-wrapper">
+      <button class="btn-sair" (click)="logout()">Sair</button>
+    </div>
+  </div>
+</ion-content>
