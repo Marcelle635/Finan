@@ -115,7 +115,7 @@
 }
 
 .total-card {
-  background: #e0e0e0;
+  background: white;
   border-radius: 15px;
   margin: 15px 20px;
   
@@ -136,10 +136,10 @@
   padding: 0 20px;
 
   .item-card-entrada {
-    background: #e0e0e0;
+    background: white;
     border-radius: 15px;
     margin: 0 0 12px 0;
-    box-shadow: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 
     .card-entrada-row {
       display: flex;
