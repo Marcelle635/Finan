@@ -73,35 +73,44 @@
     <p class="empty-msg" *ngIf="entradasFiltradas.length === 0">Nenhuma entrada encontrada.</p>
   </div>
 
-  <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)">
-    <ng-template>
-      <div class="modal-wrapper">
-        <div class="modal-header">
-          <h2>Nova Entrada</h2>
-          <button class="btn-fechar" (click)="abrirModal(false)">X</button>
-        </div>
-
-        <div class="modal-body">
-          <div class="input-group">
-            <label>Descrição</label>
-            <input type="text" placeholder="Ex: Salário, Freela" [(ngModel)]="novaEntrada.titulo">
-          </div>
-
-          <div class="input-group">
-            <label>Valor</label>
-            <input type="number" placeholder="0.00" [(ngModel)]="novaEntrada.valor">
-          </div>
-
-          <div class="input-group">
-            <label>Data</label>
-            <input type="date" [(ngModel)]="novaEntrada.data">
-          </div>
-
-          <button class="btn-adicionar-gasto" (click)="adicionarEntrada()">Adicionar</button>
-        </div>
+ <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)" class="modal-customizado">
+  <ng-template>
+    <div class="modal-wrapper">
+      
+      <div class="modal-header">
+        <span class="espacador-esquerda"></span> <h2>Nova Entrada</h2>
+        <button class="btn-fechar" (click)="abrirModal(false)">X</button>
       </div>
-    </ng-template>
-  </ion-modal>
+
+      <div class="modal-body">
+        
+        <div class="input-group">
+          <label>Nome</label>
+          <input type="text" placeholder="Ex: Aluguel" [(ngModel)]="novaEntrada.titulo">
+        </div>
+
+        <div class="input-group">
+          <label>Valor</label>
+          <input type="number" placeholder="0.00" [(ngModel)]="novaEntrada.valor">
+        </div>
+
+        <div class="input-group">
+          <label>Tipo</label>
+          <div class="select-container">
+            <select [(ngModel)]="novaEntrada.categoria">
+              <option value="Salário" selected>Salário</option>
+              <option value="Freela">Freela</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-adicionar-gasto" (click)="adicionarEntrada()">Adicionar</button>
+        
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
 </ion-content>
 
 <ion-footer class="ion-no-border">

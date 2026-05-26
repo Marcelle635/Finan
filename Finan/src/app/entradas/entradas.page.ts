@@ -69,10 +69,11 @@ export class EntradasPage implements OnInit {
     { id: 2, titulo: 'Salário', categoria: 'Salário', valor: 4000.00 }
   ];
 
+  // CORREÇÃO DO ERRO: Adicionado a propriedade 'categoria' inicializada como 'Salário'
   novaEntrada = {
     titulo: '',
     valor: null as number | null,
-    data: ''
+    categoria: 'Salário'
   };
 
   dataAncorada: Date = new Date();
@@ -143,7 +144,8 @@ export class EntradasPage implements OnInit {
   abrirModal(abrir: boolean) {
     this.isModalAberto = abrir;
     if (!abrir) {
-      this.novaEntrada = { titulo: '', valor: null, data: '' };
+      // Reseta os campos com a categoria padrão voltando para 'Salário'
+      this.novaEntrada = { titulo: '', valor: null, categoria: 'Salário' };
     }
   }
 
@@ -156,7 +158,7 @@ export class EntradasPage implements OnInit {
     this.entradasFiltradas.push({
       id: Date.now(),
       titulo: this.novaEntrada.titulo,
-      categoria: 'Entrada',
+      categoria: this.novaEntrada.categoria, // Agora salva dinamicamente o Tipo escolhido
       valor: Number(this.novaEntrada.valor)
     });
 
