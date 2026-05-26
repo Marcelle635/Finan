@@ -57,6 +57,10 @@ import {
 export class CasaPage implements OnInit {
   // Dados do usuário e listas de contas
   nomeUsuario: string = '';
+  
+  // Tenta carregar a foto salva, se não existir, usa o avatar padrão cinza do Ionic
+  fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  
   contas: Conta[] = [];
   contasFiltradas: Conta[] = [];
   filtroAtivo: 'pago' | 'pendente' | 'vencido' = 'pendente';
@@ -71,7 +75,7 @@ export class CasaPage implements OnInit {
   };
 
   // Variáveis do Seletor de Data Dinâmico (sodata.PNG)
-  dataAncorada: Date = new Date(); // Inicia com a data atual (Maio de 2026)
+  dataAncorada: Date = new Date(); // Inicia com a data atual
   textoMesAno: string = '';
   dataInicioMes: string = '';
   dataFimMes: string = '';
@@ -242,5 +246,34 @@ export class CasaPage implements OnInit {
     this.contas = this.contas.filter(c => c.id !== id);
     this.contasService.salvarContas(this.contas);
     this.carregarDados();
+  }
+
+  /**
+   * Simula o clique no input do tipo file oculto quando o usuário clica no avatar
+   */
+  dispararSeletorArquivo() {
+    const elementoInput = document.getElementById('seletorArquivo') as HTMLInputElement;
+    if (elementoInput) {
+      elementoInput.click();
+    }
+  }
+
+  /**
+   * Processa a foto selecionada e converte em Base64 para exibir na tela e salvar localmente
+   */
+  aoSelecionarFoto(event: any) {
+    const arquivo = event.target.files[0];
+    
+    if (arquivo) {
+      const reader = new FileReader();
+      
+      reader.onload = (e: any) => {
+        this.fotoUsuario = e.target.result;
+        // Salva a foto em formato string no armazenamento local do navegador
+        localStorage.setItem('foto_usuario', this.fotoUsuario);
+      };
+      
+      reader.readAsDataURL(arquivo);
+    }
   }
 }
