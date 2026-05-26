@@ -1,13 +1,82 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>grafico</ion-title>
-  </ion-toolbar>
+<ion-header class="ion-no-border">
+  <div class="header-purple">
+    <ion-item lines="none" class="user-info">
+      <ion-avatar slot="start">
+        <img [src]="fotoUsuario" alt="Foto de perfil" />
+      </ion-avatar>
+
+      <ion-label>
+        <p class="texto-boas-vindas">Bem vindo(a)</p>
+        <h1>{{ nomeUsuario }}</h1>
+      </ion-label>
+      <ion-icon name="settings-outline" slot="end" color="light"></ion-icon>
+    </ion-item>
+    
+    <div class="saldo-container">
+      <p>Saldo geral</p>
+      <div class="saldo-row">
+        <span>********</span>
+        <ion-icon name="eye-off-outline"></ion-icon>
+      </div>
+    </div>
+  </div>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">grafico</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <div class="date-selector">
+    <div class="date-header">
+      <ion-icon name="chevron-back-outline" (click)="mudarAno(-1)"></ion-icon>
+      <span class="mes-titulo">Janeiro de 2026</span>
+      <ion-icon name="chevron-forward-outline" (click)="mudarAno(1)"></ion-icon>
+    </div>
+
+    <div class="date-details">
+      <div class="detail-item">De 01/01/2026</div>
+      <div class="detail-item">Até 31/01/2026</div>
+      <div class="detail-item status-mes">Mês Atual</div>
+    </div>
+  </div>
+
+  <div class="meses-lista-container">
+    <div *ngFor="let item of dadosMeses" class="card-mes-acumulado" [style.background]="item.corFundo">
+      <span class="nome-mes">{{ item.mes }}</span>
+      <span class="valor-mes">{{ item.gastos | currency:'BRL' }}</span>
+    </div>
+  </div>
+
+  <div class="grafico-geral-container">
+    <h3>Gastos dos meses</h3>
+    
+    <div class="barras-wrapper">
+      <div *ngFor="let item of dadosMeses" class="coluna-grafico-item">
+        <div class="barra-preenchimento" 
+             [style.height]="calcularAlturaBarra(item.gastos) + 'px'"
+             [style.background]="item.corFundo">
+        </div>
+        <span class="legenda-mes">{{ item.mes }}</span>
+        <span class="legenda-valor">{{ item.gastos | currency:'BRL':'symbol':'1.0-0' }}</span>
+      </div>
+    </div>
+  </div>
 </ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="casa" routerLink="/casa">
+      <ion-icon name="home-outline"></ion-icon>
+      <ion-label>Home</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="entradas" routerLink="/entradas">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <ion-label>Entradas</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="grafico" routerLink="/grafico">
+      <ion-icon name="trending-up"></ion-icon>
+      <ion-label>Gráfico</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="desejos" routerLink="/desejos">
+      <ion-icon name="heart-outline"></ion-icon>
+      <ion-label>Desejos</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>
