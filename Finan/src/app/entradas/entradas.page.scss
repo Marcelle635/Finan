@@ -47,7 +47,7 @@
 }
 
 .date-selector {
-  background: #e0e0e0; // Cinza claro idêntico ao total-card
+  background: white;
   margin: 15px 20px;
   padding: 10px;
   border-radius: 25px;
@@ -284,5 +284,5 @@ ion-modal {
 }
 
 ion-content {
-  --background: #ffffff; 
+  --background: hsl(265, 100%, 97%); 
 }
