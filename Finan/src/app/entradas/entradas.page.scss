@@ -1,0 +1,288 @@
+.header-purple {
+  background: #a349d5;
+  color: white;
+  padding: 20px;
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+
+  .user-info {
+    --background: transparent;
+    --color: white;
+    padding: 0;
+
+    ion-avatar {
+      width: 45px;   
+      height: 45px;
+      
+      img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    p { 
+      color: #ffffff;
+      font-weight: 500;          
+      margin-bottom: 2px;
+    }
+    
+    h1 { 
+      font-weight: bold; 
+      margin-top: 4px; 
+    }
+  }
+
+  .saldo-container {
+    margin-top: 15px;
+    padding-left: 10px;
+
+    .saldo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2em;
+    }
+  }
+}
+
+.date-selector {
+  background: #e0e0e0; // Cinza claro idêntico ao total-card
+  margin: 15px 20px;
+  padding: 10px;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+  .date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+
+    ion-icon {
+      font-size: 1.4em;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .mes-titulo {
+      font-size: 1em;
+      font-weight: bold;
+      color: #000;
+    }
+  }
+
+  .date-details {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+
+    .detail-item {
+      font-size: 0.80em;
+      color: #757575;
+      font-weight: bold;
+      flex: 1;
+      text-align: center;
+
+      &:first-child { text-align: left; }
+      &:last-child { text-align: right; }
+    }
+  }
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  margin-top: 20px;
+  
+  h2 { 
+    font-size: 1.4em; 
+    font-weight: bold; 
+  }
+}
+
+.btn-adicionar {
+  --background: #a349d5;
+  --background-activated: #8e3cb8;
+  --color: white;
+  --box-shadow: 0 4px 10px rgba(163, 73, 213, 0.3);
+}
+
+.total-card {
+  background: #e0e0e0;
+  border-radius: 15px;
+  margin: 15px 20px;
+  
+  .wallet-icon { 
+    font-size: 2em; 
+    color: #a349d5; 
+  }
+
+  h3 {
+    font-weight: bold;
+    font-size: 1.4em;
+    margin: 4px 0 0 0;
+  }
+}
+
+// Estilização customizada da listagem de itens da imagem
+.list-container {
+  padding: 0 20px;
+
+  .item-card-entrada {
+    background: #e0e0e0;
+    border-radius: 15px;
+    margin: 0 0 12px 0;
+    box-shadow: none;
+
+    .card-entrada-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .info-entrada {
+      display: flex;
+      flex-direction: column;
+
+      .titulo {
+        font-weight: bold;
+        color: #000;
+        font-size: 1.1em;
+      }
+      .categoria {
+        margin: 2px 0 0 0;
+        font-size: 0.85em;
+        color: #757575;
+      }
+    }
+
+    .valor-e-acao {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      .valor {
+        color: #a349d5;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .btn-excluir {
+        font-size: 1.3em;
+        color: #333;
+        cursor: pointer;
+        
+        &:hover {
+          color: red;
+        }
+      }
+    }
+  }
+
+  .empty-msg {
+    text-align: center;
+    color: #757575;
+    margin-top: 20px;
+  }
+}
+
+ion-tab-bar {
+  --background: #a349d5;
+  border-top: none;
+
+  ion-tab-button {
+    --background: transparent; 
+    --color: #e9e9e9;      
+    --color-selected: #ffffff;
+
+    ion-label {
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Customização do Modal
+ion-modal {
+  --background: rgba(0, 0, 0, 0.4);
+
+  .modal-wrapper {
+    background: hsl(0, 0%, 100%); 
+    border-radius: 20px;
+    margin: auto 25px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      
+      h2 {
+        margin: 0;
+        font-weight: bold;
+        font-size: 1.3em;
+        text-align: center;
+        flex: 1;
+        color: #000;
+      }
+
+      .btn-fechar {
+        background: transparent;
+        border: none;
+        font-weight: bold;
+        font-size: 1.2em;
+        color: #666;
+      }
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        label {
+          font-weight: bold;
+          color: #000;
+        }
+
+        input {
+          background: hsl(276, 100%, 98%);
+          border: none;
+          padding: 12px;
+          border-radius: 10px;
+          color: #000;
+          font-size: 1em;
+        }
+      }
+
+      .btn-adicionar-gasto {
+        background: #a349d5;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-top: 10px;
+      }
+    }
+  }
+}
+
+ion-content {
+  --background: #ffffff; 
+}

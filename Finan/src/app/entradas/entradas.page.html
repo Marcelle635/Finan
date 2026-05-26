@@ -1,18 +1,10 @@
 <ion-header class="ion-no-border">
   <div class="header-purple">
     <ion-item lines="none" class="user-info">
-    <ion-avatar slot="start" (click)="dispararSeletorArquivo()" style="cursor: pointer;">
-    <img [src]="fotoUsuario" alt="Foto de perfil" />
-  </ion-avatar>
+      <ion-avatar slot="start">
+        <img [src]="fotoUsuario" alt="Foto de perfil" />
+      </ion-avatar>
 
-  <input 
-    type="file" 
-    #seletorArquivo 
-    id="seletorArquivo" 
-    accept="image/*" 
-    style="display: none;" 
-    (change)="aoSelecionarFoto($event)" 
-  />
       <ion-label>
         <p class="texto-boas-vindas">Bem vindo(a)</p>
         <h1>{{ nomeUsuario }}</h1>
@@ -46,76 +38,66 @@
   </div>
 
   <div class="section-title">
-    <h2>Contas</h2>
+    <h2>Entradas</h2>
     <ion-fab-button size="small" class="btn-adicionar" (click)="abrirModal(true)">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
-  </div>
-
-  <div class="filter-bar">
-    <div class="filter-options">
-      <button (click)="filtrar('pago')" [class.active]="filtroAtivo === 'pago'">Pago</button>
-      <button (click)="filtrar('pendente')" [class.active]="filtroAtivo === 'pendente'">Pendente</button>
-      <button (click)="filtrar('vencido')" [class.active]="filtroAtivo === 'vencido'">Vencido</button>
-    </div>
   </div>
 
   <ion-card class="total-card">
     <ion-item lines="none">
       <ion-icon name="wallet-outline" slot="start" class="wallet-icon"></ion-icon>
       <ion-label>
-        <p>Total de gastos</p>
-        <h3>{{ totalGastos | currency:'BRL' }}</h3>
+        <p>Total de Entradas</p>
+        <h3>{{ totalEntradas | currency:'BRL' }}</h3>
       </ion-label>
     </ion-item>
   </ion-card>
 
   <div class="list-container">
-    <ion-card *ngFor="let conta of contasFiltradas" class="item-card">
+    <ion-card *ngFor="let entrada of entradasFiltradas" class="item-card-entrada">
       <ion-card-content>
-        <div class="card-header">
-          <span class="titulo">{{ conta.titulo }}</span>
-          <span class="valor">{{ conta.valor | currency:'BRL' }}</span>
+        <div class="card-entrada-row">
+          <div class="info-entrada">
+            <span class="titulo">{{ entrada.titulo }}</span>
+            <p class="categoria">{{ entrada.categoria }}</p>
+          </div>
+          <div class="valor-e-acao">
+            <span class="valor">{{ entrada.valor | currency:'BRL' }}</span>
+            <ion-icon name="trash-outline" class="btn-excluir" (click)="excluirEntrada(entrada.id)"></ion-icon>
+          </div>
         </div>
-        <p class="vencimento" *ngIf="conta.status !== 'pago'">Vencimento: {{ conta.vencimento }}</p>
-        
-        <button class="btn-pago" *ngIf="conta.status !== 'pago'" (click)="marcarComoPago(conta.id)">
-          Marcar como pago
-        </button>
-        <button class="btn-pago btn-limpar" *ngIf="conta.status === 'pago'" (click)="excluirConta(conta.id)">
-          Limpar
-        </button>
       </ion-card-content>
     </ion-card>
 
-    <p class="empty-msg" *ngIf="contasFiltradas.length === 0">Nenhuma conta encontrada.</p>
+    <p class="empty-msg" *ngIf="entradasFiltradas.length === 0">Nenhuma entrada encontrada.</p>
   </div>
 
   <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)">
     <ng-template>
       <div class="modal-wrapper">
         <div class="modal-header">
-          <h2>Novo Gasto</h2>
+          <h2>Nova Entrada</h2>
           <button class="btn-fechar" (click)="abrirModal(false)">X</button>
         </div>
 
         <div class="modal-body">
           <div class="input-group">
-            <label>Nome</label>
-            <input type="text" placeholder="Ex: Aluguel" [(ngModel)]="novaConta.titulo">
+            <label>Descrição</label>
+            <input type="text" placeholder="Ex: Salário, Freela" [(ngModel)]="novaEntrada.titulo">
           </div>
 
           <div class="input-group">
             <label>Valor</label>
-            <input type="number" placeholder="0.00" [(ngModel)]="novaConta.valor">
+            <input type="number" placeholder="0.00" [(ngModel)]="novaEntrada.valor">
           </div>
 
           <div class="input-group">
-            <label>Vencimento</label>
-            <input type="date" [(ngModel)]="novaConta.vencimento">
+            <label>Data</label>
+            <input type="date" [(ngModel)]="novaEntrada.data">
           </div>
 
-          <button class="btn-adicionar-gasto" (click)="adicionarGasto()">Adicionar</button>
+          <button class="btn-adicionar-gasto" (click)="adicionarEntrada()">Adicionar</button>
         </div>
       </div>
     </ng-template>
@@ -128,12 +110,10 @@
       <ion-icon name="home-outline"></ion-icon>
       <ion-label>Home</ion-label>
     </ion-tab-button>
-    
     <ion-tab-button tab="entradas" routerLink="/entradas">
       <ion-icon name="wallet-outline"></ion-icon>
       <ion-label>Entradas</ion-label>
     </ion-tab-button>
-    
     <ion-tab-button tab="grafico" routerLink="/grafico">
       <ion-icon name="trending-up-outline"></ion-icon>
       <ion-label>Gráfico</ion-label>

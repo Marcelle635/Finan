@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router'; // Importado para funcionar o routerLink no HTML
+
 import { 
   IonContent, 
   IonHeader, 
@@ -39,6 +41,7 @@ import {
   imports: [
     CommonModule, 
     FormsModule, 
+    RouterLink, // Adicionado no array de imports do Standalone Component
     IonContent, 
     IonHeader, 
     IonItem, 
@@ -66,7 +69,7 @@ export class CasaPage implements OnInit {
   filtroAtivo: 'pago' | 'pendente' | 'vencido' = 'pendente';
   totalGastos: number = 0;
 
-  // Gerenciamento do Modal de Cadastro (socard.PNG)
+  // Gerenciamento do Modal de Cadastro
   isModalAberto = false;
   novaConta = {
     titulo: '',
@@ -74,7 +77,7 @@ export class CasaPage implements OnInit {
     vencimento: ''
   };
 
-  // Variáveis do Seletor de Data Dinâmico (sodata.PNG)
+  // Variáveis do Seletor de Data Dinâmico
   dataAncorada: Date = new Date(); // Inicia com a data atual
   textoMesAno: string = '';
   dataInicioMes: string = '';
@@ -205,7 +208,7 @@ export class CasaPage implements OnInit {
   }
 
   /**
-   * Adiciona um novo item vindo do Modal (socard.PNG)
+   * Adiciona um novo item vindo do Modal
    */
   adicionarGasto() {
     if (!this.novaConta.titulo || !this.novaConta.valor || !this.novaConta.vencimento) {
@@ -228,7 +231,7 @@ export class CasaPage implements OnInit {
   }
 
   /**
-   * Altera o status da conta para pago (dic.PNG -> pagoso.PNG)
+   * Altera o status da conta para pago
    */
   marcarComoPago(id: number) {
     const index = this.contas.findIndex(c => c.id === id);
@@ -240,7 +243,7 @@ export class CasaPage implements OnInit {
   }
 
   /**
-   * Remove permanentemente a conta (Ação do botão Limpar em pagoso.PNG)
+   * Remove permanentemente a conta
    */
   excluirConta(id: number) {
     this.contas = this.contas.filter(c => c.id !== id);
