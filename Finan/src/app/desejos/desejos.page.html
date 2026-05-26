@@ -1,13 +1,128 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>desejos</ion-title>
-  </ion-toolbar>
+<ion-header class="ion-no-border">
+  <div class="header-purple">
+    <ion-item lines="none" class="user-info">
+      <ion-avatar slot="start">
+        <img [src]="fotoUsuario" alt="Foto de perfil" />
+      </ion-avatar>
+
+      <ion-label>
+        <p class="texto-boas-vindas">Bem vindo(a)</p>
+        <h1>{{ nomeUsuario }}</h1>
+      </ion-label>
+      <ion-icon name="settings-outline" slot="end" color="light"></ion-icon>
+    </ion-item>
+    
+    <div class="saldo-container">
+      <p>Saldo geral</p>
+      <div class="saldo-row">
+        <span>********</span>
+        <ion-icon name="eye-off-outline"></ion-icon>
+      </div>
+    </div>
+  </div>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">desejos</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <div class="date-selector">
+    <div class="date-header">
+      <ion-icon name="chevron-back-outline" (click)="mudarMes(-1)"></ion-icon>
+      <span class="mes-titulo">{{ textoMesAno }}</span>
+      <ion-icon name="chevron-forward-outline" (click)="mudarMes(1)"></ion-icon>
+    </div>
+
+    <div class="date-details">
+      <div class="detail-item">De {{ dataInicioMes }}</div>
+      <div class="detail-item">Até {{ dataFimMes }}</div>
+      <div class="detail-item status-mes">{{ statusMesTexto }}</div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h2>Desejos</h2>
+    <ion-fab-button size="small" class="btn-adicionar" (click)="abrirModal(true)">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </div>
+
+  <div class="resumo-desejos-container">
+    <div class="card-resumo">
+      <p>Total<br>Desejado</p>
+      <ion-icon name="heart-outline"></ion-icon>
+      <span>{{ totalDesejado | currency:'BRL' }}</span>
+    </div>
+
+    <div class="card-resumo">
+      <p>Conquistado</p>
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <span>{{ totalConquistado | currency:'BRL' }}</span>
+    </div>
+  </div>
+
+  <div class="list-container">
+    <div *ngFor="let desejo of desejosFiltrados" class="item-card-desejo">
+      <div class="card-desejo-header">
+        <div class="info-desejo">
+          <span class="titulo">{{ desejo.titulo }}</span>
+          <span class="valor">{{ desejo.valor | currency:'BRL':'symbol':'1.2-2' }}</span>
+        </div>
+        <ion-icon name="trash-outline" class="btn-excluir" (click)="excluirDesejo(desejo.id)"></ion-icon>
+      </div>
+
+      <button 
+        class="btn-acao-desejo" 
+        [ngClass]="desejo.conquistado ? 'btn-conquistado' : 'btn-comprei'"
+        (click)="alternarStatusDesejo(desejo)">
+        <ion-icon [name]="desejo.conquistado ? 'gift-outline' : 'cart-outline'"></ion-icon>
+        {{ desejo.conquistado ? 'Conquistado' : 'Comprei!' }}
+      </button>
+    </div>
+
+    <p class="empty-msg" *ngIf="desejosFiltrados.length === 0">Nenhum desejo adicionado.</p>
+  </div>
+
+  <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)" class="modal-customizado">
+    <ng-template>
+      <div class="modal-wrapper">
+        <div class="modal-header">
+          <h2>Novo Desejo</h2>
+          <button class="btn-fechar" (click)="abrirModal(false)">X</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="input-group">
+            <label>Nome</label>
+            <input type="text" placeholder="Ex: Gloss, Brincos" [(ngModel)]="novoDesejo.titulo">
+          </div>
+
+          <div class="input-group">
+            <label>Valor</label>
+            <input type="number" placeholder="0.00" [(ngModel)]="novoDesejo.valor">
+          </div>
+
+          <button class="btn-adicionar-gasto" (click)="adicionarDesejo()">Adicionar</button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="casa" routerLink="/casa">
+      <ion-icon name="home-outline"></ion-icon>
+      <ion-label>Home</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="entradas" routerLink="/entradas">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <ion-label>Entradas</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="grafico" routerLink="/grafico">
+      <ion-icon name="trending-up-outline"></ion-icon>
+      <ion-label>Gráfico</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="desejos" routerLink="/desejos">
+      <ion-icon name="heart"></ion-icon>
+      <ion-label>Desejos</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>
