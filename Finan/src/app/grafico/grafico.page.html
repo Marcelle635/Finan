@@ -10,18 +10,20 @@
         <h1>{{ nomeUsuario }}</h1>
       </ion-label>
       <ion-icon 
-  name="settings-outline" 
-  slot="end" 
-  color="light" 
-  routerLink="/configuracoes">
-</ion-icon>
+        name="settings-outline" 
+        slot="end" 
+        color="light" 
+        routerLink="/configuracoes">
+      </ion-icon>
     </ion-item>
     
     <div class="saldo-container">
       <p>Saldo geral</p>
-      <div class="saldo-row">
-        <span>********</span>
-        <ion-icon name="eye-off-outline"></ion-icon>
+      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()">
+        <span *ngIf="!exibirSaldo">********</span>
+        <span *ngIf="exibirSaldo" class="valor-saldo-geral">{{ totalEntradas | currency:'BRL' }}</span>
+        
+        <ion-icon [name]="exibirSaldo ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
       </div>
     </div>
   </div>
@@ -31,14 +33,14 @@
   <div class="date-selector">
     <div class="date-header">
       <ion-icon name="chevron-back-outline" (click)="mudarAno(-1)"></ion-icon>
-      <span class="mes-titulo">Janeiro de 2026</span>
+      <span class="mes-titulo">{{ textoMesAno }}</span>
       <ion-icon name="chevron-forward-outline" (click)="mudarAno(1)"></ion-icon>
     </div>
 
     <div class="date-details">
-      <div class="detail-item">De 01/01/2026</div>
-      <div class="detail-item">Até 31/01/2026</div>
-      <div class="detail-item status-mes">Mês Atual</div>
+      <div class="detail-item">De {{ dataInicioMes }}</div>
+      <div class="detail-item">Até {{ dataFimMes }}</div>
+      <div class="detail-item status-mes" *ngIf="statusMesTexto">{{ statusMesTexto }}</div>
     </div>
   </div>
 
