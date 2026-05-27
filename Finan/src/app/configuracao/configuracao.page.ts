@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router'; // MODIFICADO: Adicionado Router e RouterLink
 import { 
   IonContent, 
   IonHeader, 
@@ -20,11 +21,12 @@ import {
 
 @Component({
   selector: 'app-configuracao',
-  templateUrl: './configuracao.page.html', // CORRIGIDO PARA O SINGULAR!
-  styleUrls: ['./configuracao.page.scss'],   // CORRIGIDO PARA O SINGULAR!
+  templateUrl: './configuracao.page.html',
+  styleUrls: ['./configuracao.page.scss'],   
   standalone: true,
   imports: [
     CommonModule, 
+    RouterLink, // MODIFICADO: Importado para permitir o link no HTML
     IonContent, 
     IonHeader, 
     IonItem, 
@@ -38,7 +40,11 @@ export class ConfiguracoesPage implements OnInit {
   nomeUsuario: string = '';
   fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
 
-  constructor(private contasService: ContasService) {
+  // MODIFICADO: Injetado o Router do Angular para fazer o redirecionamento do logout
+  constructor(
+    private contasService: ContasService,
+    private router: Router
+  ) {
     addIcons({ 
       settings, 
       notificationsOutline, 
@@ -59,7 +65,17 @@ export class ConfiguracoesPage implements OnInit {
     console.log('Navegar para alteração de senha');
   }
 
+  // MODIFICADO: Função limpa a sessão local e redireciona para a tela de login
   logout() {
-    console.log('Executar rotina de logout do app');
+    // 1. Remove a indicação de usuário logado (ajuste as chaves se o seu app usar nomes diferentes)
+    localStorage.removeItem('usuario_logado'); 
+    
+    // Se o seu ContasService tiver uma função específica para deslogar (como limpar variáveis internas), você pode chamá-la aqui:
+    // this.contasService.limparSessao();
+
+    console.log('Usuário deslogado com sucesso.');
+
+    // 2. Redireciona o usuário para a página de login de forma limpa
+    this.router.navigate(['/login']);
   }
 }
