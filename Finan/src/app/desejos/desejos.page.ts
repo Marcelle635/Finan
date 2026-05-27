@@ -18,8 +18,9 @@ import {
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
 import { 
-  settings, // Adicionado para garantir o funcionamento correto com a rota ativa
+  settings, 
   settingsOutline, 
+  eyeOutline,
   eyeOffOutline, 
   chevronBackOutline, 
   chevronForwardOutline, 
@@ -61,15 +62,15 @@ export class DesejosPage implements OnInit {
   nomeUsuario: string = '';
   fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
   
+  totalEntradas: number = 0;
+  exibirSaldo: boolean = false;
+
   totalDesejado: number = 0;
   totalConquistado: number = 0;
   isModalAberto: boolean = false;
 
-  // Dados mockados iniciais com base no desejosso.PNG
-  desejosFiltrados: any[] = [
-    { id: 1, titulo: 'Gloss Franciny', valor: 90.00, conquistado: false },
-    { id: 2, titulo: 'Brincos', valor: 190.00, conquistado: true }
-  ];
+  // MODIFICADO: Começa como um array vazio para não trazer valores estáticos/mockados de teste
+  desejosFiltrados: any[] = [];
 
   novoDesejo = {
     titulo: '',
@@ -86,6 +87,7 @@ export class DesejosPage implements OnInit {
     addIcons({ 
       settings,
       settingsOutline, 
+      eyeOutline,
       eyeOffOutline, 
       chevronBackOutline, 
       chevronForwardOutline, 
@@ -105,7 +107,6 @@ export class DesejosPage implements OnInit {
   ngOnInit() {
     this.inicializarSeletorData();
     this.carregarDados();
-    this.calcularTotais();
   }
 
   ionViewWillEnter() {
@@ -115,6 +116,19 @@ export class DesejosPage implements OnInit {
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
     this.fotoUsuario = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    
+    this.calcularTotalEntradasDoUsuario();
+    this.carregarDesejosDoUsuario(); // MODIFICADO: Carrega os desejos salvos reais do usuário
+  }
+
+  calcularTotalEntradasDoUsuario() {
+    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
+    const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
+    this.totalEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+  }
+
+  alternarVisibilidadeSaldo() {
+    this.exibirSaldo = !this.exibirSaldo;
   }
 
   inicializarSeletorData() {
@@ -148,8 +162,36 @@ export class DesejosPage implements OnInit {
     }
   }
 
+  /**
+   * NOVAS FUNÇÕES PARA SALVAR E FILTRAR DE ACORDO COM A CONTA DE CADA USUÁRIO
+   */
+
+  carregarDesejosDoUsuario() {
+    // Busca a lista mestre global de desejos no dispositivo
+    const todosDesejosGeral = JSON.parse(localStorage.getItem('app_todas_contas_desejos') || '[]');
+    
+    // Filtra para exibir apenas os desejos pertencentes à conta do usuário atual
+    this.desejosFiltrados = todosDesejosGeral.filter((desejo: any) => desejo.usuario === this.nomeUsuario);
+    
+    this.calcularTotais();
+  }
+
+  salvarDesejosNoStorage(listaLocalAtualizada: any[]) {
+    // Carrega tudo o que existe hoje no dispositivo
+    const todosDesejosGeral = JSON.parse(localStorage.getItem('app_todas_contas_desejos') || '[]');
+    
+    // Remove os registros antigos desse usuário específico para não duplicar
+    const outrosUsuarios = todosDesejosGeral.filter((desejo: any) => desejo.usuario !== this.nomeUsuario);
+    
+    // Junta os desejos atualizados do usuário com os desejos dos outros usuários logados no mesmo celular
+    const bancoAtualizado = [...outrosUsuarios, ...listaLocalAtualizada];
+    
+    // Salva de volta no banco de dados local
+    localStorage.setItem('app_todas_contas_desejos', JSON.stringify(bancoAtualizado));
+  }
+
   calcularTotais() {
-    // Total desejado = Soma de TODOS os itens do mês
+    // Total desejado = Soma de TODOS os itens do usuário
     this.totalDesejado = this.desejosFiltrados.reduce((acc, item) => acc + item.valor, 0);
     
     // Total conquistado = Soma apenas dos itens marcados como true (Conquistado)
@@ -164,25 +206,33 @@ export class DesejosPage implements OnInit {
       return;
     }
 
-    this.desejosFiltrados.push({
+    // Cria o objeto contendo o vínculo do usuário logado dono da conta
+    const novoItem = {
       id: Date.now(),
+      usuario: this.nomeUsuario, // Vínculo com a conta
       titulo: this.novoDesejo.titulo,
       valor: Number(this.novoDesejo.valor),
       conquistado: false
-    });
+    };
 
+    this.desejosFiltrados.push(novoItem);
+    
+    this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
     this.abrirModal(false);
   }
 
   alternarStatusDesejo(desejo: any) {
-    // Inverte o estado de false para true (ou vice-versa) ao clicar no botão
     desejo.conquistado = !desejo.conquistado;
+    
+    this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
   }
 
   excluirDesejo(id: number) {
     this.desejosFiltrados = this.desejosFiltrados.filter(d => d.id !== id);
+    
+    this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
   }
 }

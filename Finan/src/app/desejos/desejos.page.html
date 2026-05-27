@@ -9,19 +9,21 @@
         <p class="texto-boas-vindas">Bem vindo(a)</p>
         <h1>{{ nomeUsuario }}</h1>
       </ion-label>
-     <ion-icon 
-  name="settings-outline" 
-  slot="end" 
-  color="light" 
-  routerLink="/configuracoes">
-</ion-icon>
+      <ion-icon 
+        name="settings-outline" 
+        slot="end" 
+        color="light" 
+        routerLink="/configuracoes">
+      </ion-icon>
     </ion-item>
     
     <div class="saldo-container">
       <p>Saldo geral</p>
-      <div class="saldo-row">
-        <span>********</span>
-        <ion-icon name="eye-off-outline"></ion-icon>
+      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()" style="cursor: pointer;">
+        <span *ngIf="!exibirSaldo">********</span>
+        <span *ngIf="exibirSaldo" class="valor-saldo-geral">{{ totalEntradas | currency:'BRL' }}</span>
+        
+        <ion-icon [name]="exibirSaldo ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
       </div>
     </div>
   </div>
@@ -38,7 +40,7 @@
     <div class="date-details">
       <div class="detail-item">De {{ dataInicioMes }}</div>
       <div class="detail-item">Até {{ dataFimMes }}</div>
-      <div class="detail-item status-mes">{{ statusMesTexto }}</div>
+      <div class="detail-item status-mes" *ngIf="statusMesTexto">{{ statusMesTexto }}</div>
     </div>
   </div>
 
