@@ -17,11 +17,12 @@ import {
   IonTabButton,
   IonModal 
 } from '@ionic/angular/standalone'; 
-import { ContasService } from '../services/contas.service'; // 1. IMPORTAÇÃO DO SEU SERVIÇO
+import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
 import { 
-  settings, // Adicionado para garantir o funcionamento correto com a rota ativa
+  settings, 
   settingsOutline, 
+  eyeOutline,      // Adicionado para quando o saldo aparecer
   eyeOffOutline, 
   chevronBackOutline, 
   chevronForwardOutline, 
@@ -58,20 +59,17 @@ import {
   ]
 })
 export class EntradasPage implements OnInit {
-  // Variáveis dinâmicas do usuário
   nomeUsuario: string = '';
   fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
   
-  totalEntradas: number = 0;
+  totalEntradas: number = 0; 
   isModalAberto: boolean = false;
+  
+  // MODIFICAÇÃO: Controla se o saldo geral está visível ou oculto com asteriscos
+  exibirSaldo: boolean = false;
 
-  // Dados iniciais com base nas listagens do app
-  entradasFiltradas: any[] = [
-    { id: 1, titulo: 'Salário', categoria: 'Salário', valor: 1000.00 },
-    { id: 2, titulo: 'Salário', categoria: 'Salário', valor: 4000.00 }
-  ];
+  entradasFiltradas: any[] = [];
 
-  // CORREÇÃO DO ERRO: Adicionado a propriedade 'categoria' inicializada como 'Salário'
   novaEntrada = {
     titulo: '',
     valor: null as number | null,
@@ -84,11 +82,11 @@ export class EntradasPage implements OnInit {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
-  // 2. INJEÇÃO DO SERVIÇO NO CONSTRUTOR
   constructor(private contasService: ContasService) {
     addIcons({ 
       settings,
       settingsOutline, 
+      eyeOutline, // Registrando o ícone do olho aberto
       eyeOffOutline, 
       chevronBackOutline, 
       chevronForwardOutline, 
@@ -103,22 +101,23 @@ export class EntradasPage implements OnInit {
 
   ngOnInit() {
     this.inicializarSeletorData();
-    this.carregarDados(); // Carrega ao iniciar
-    this.calcularTotalEntradas(); // Calcula a soma inicial das entradas
+    this.carregarDados(); 
   }
 
-  // Garante que atualiza o nome mesmo se trocar de usuário sem recarregar o app
   ionViewWillEnter() {
     this.carregarDados();
   }
 
-  /**
-   * 3. BUSCA OS DADOS DO USUÁRIO LOGADO DIRETAMENTE DO SERVIÇO
-   */
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
-    // Atualiza a foto caso ela tenha sido alterada na página Home/Casa
     this.fotoUsuario = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    this.carregarEntradasDoUsuario();
+  }
+
+  carregarEntradasDoUsuario() {
+    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
+    this.entradasFiltradas = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
+    this.calcularTotalEntradas();
   }
 
   inicializarSeletorData() {
@@ -148,14 +147,17 @@ export class EntradasPage implements OnInit {
   abrirModal(abrir: boolean) {
     this.isModalAberto = abrir;
     if (!abrir) {
-      // Reseta os campos com a categoria padrão voltando para 'Salário'
       this.novaEntrada = { titulo: '', valor: null, categoria: 'Salário' };
     }
   }
 
   /**
-   * Calcula dinamicamente o somatório de todas as entradas na lista
+   * Alterna a visibilidade do Saldo Geral ao clicar na linha do saldo
    */
+  alternarVisibilidadeSaldo() {
+    this.exibirSaldo = !this.exibirSaldo;
+  }
+
   calcularTotalEntradas() {
     this.totalEntradas = this.entradasFiltradas.reduce((acc, entrada) => acc + entrada.valor, 0);
   }
@@ -166,19 +168,28 @@ export class EntradasPage implements OnInit {
       return;
     }
     
-    this.entradasFiltradas.push({
+    const novaObjetoEntrada = {
       id: Date.now(),
+      usuario: this.nomeUsuario, 
       titulo: this.novaEntrada.titulo,
-      categoria: this.novaEntrada.categoria, // Agora salva dinamicamente o Tipo escolhido
+      categoria: this.novaEntrada.categoria,
       valor: Number(this.novaEntrada.valor)
-    });
+    };
 
-    this.calcularTotalEntradas(); // Recalcula o saldo total geral de entradas
+    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
+    todasEntradas.push(novaObjetoEntrada);
+    
+    localStorage.setItem('app_todas_entradas', JSON.stringify(todasEntradas));
+
+    this.carregarEntradasDoUsuario();
     this.abrirModal(false);
   }
 
   excluirEntrada(id: number) {
-    this.entradasFiltradas = this.entradasFiltradas.filter(e => e.id !== id);
-    this.calcularTotalEntradas(); // Recalcula diminuindo o item excluído
+    let todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
+    todasEntradas = todasEntradas.filter((e: any) => e.id !== id);
+    localStorage.setItem('app_todas_entradas', JSON.stringify(todasEntradas));
+
+    this.carregarEntradasDoUsuario();
   }
 }

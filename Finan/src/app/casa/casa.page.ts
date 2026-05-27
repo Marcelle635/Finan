@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router'; // Importado para funcionar o routerLink no HTML
+import { RouterLink } from '@angular/router';
 
 import { 
   IonContent, 
@@ -22,8 +22,9 @@ import { ContasService } from '../services/contas.service';
 import { Conta } from '../models/conta.model';
 import { addIcons } from 'ionicons';
 import { 
-  settings, // Adicionado para suportar a navegação ativa no cabeçalho
+  settings, 
   settingsOutline, 
+  eyeOutline,       // Adicionado para o estado visível do saldo
   eyeOffOutline, 
   chevronBackOutline, 
   chevronForwardOutline, 
@@ -42,7 +43,7 @@ import {
   imports: [
     CommonModule, 
     FormsModule, 
-    RouterLink, // Adicionado no array de imports do Standalone Component
+    RouterLink, 
     IonContent, 
     IonHeader, 
     IonItem, 
@@ -59,18 +60,18 @@ import {
   ]
 })
 export class CasaPage implements OnInit {
-  // Dados do usuário e listas de contas
   nomeUsuario: string = '';
-  
-  // Tenta carregar a foto salva, se não existir, usa o avatar padrão cinza do Ionic
   fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
   
-  contas: Conta[] = [];
-  contasFiltradas: Conta[] = [];
+  contas: any[] = []; // Alterado para mapear dados dinâmicos com a tag usuario
+  contasFiltradas: any[] = [];
   filtroAtivo: 'pago' | 'pendente' | 'vencido' = 'pendente';
   totalGastos: number = 0;
+  
+  // MODIFICAÇÕES: Variáveis para controle do Saldo Geral extraído das Entradas
+  totalEntradas: number = 0;
+  exibirSaldo: boolean = false;
 
-  // Gerenciamento do Modal de Cadastro
   isModalAberto = false;
   novaConta = {
     titulo: '',
@@ -78,18 +79,17 @@ export class CasaPage implements OnInit {
     vencimento: ''
   };
 
-  // Variáveis do Seletor de Data Dinâmico
-  dataAncorada: Date = new Date(); // Inicia com a data atual
+  dataAncorada: Date = new Date(); 
   textoMesAno: string = '';
   dataInicioMes: string = '';
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
   constructor(private contasService: ContasService) {
-    // Registro dos ícones do Ionicons
     addIcons({ 
       settings,
       settingsOutline, 
+      eyeOutline,
       eyeOffOutline, 
       chevronBackOutline, 
       chevronForwardOutline, 
@@ -110,53 +110,40 @@ export class CasaPage implements OnInit {
     this.carregarDados();
   }
 
-  /**
-   * Inicializa o cabeçalho de períodos e calcula as datas de início e fim
-   */
   inicializarSeletorData() {
     const meses = [
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
-
     const ano = this.dataAncorada.getFullYear();
     const mesIndex = this.dataAncorada.getMonth();
 
-    // Define o título principal (Ex: "Maio de 2026")
     this.textoMesAno = `${meses[mesIndex]} de ${ano}`;
-
-    // Calcula o primeiro dia (sempre 01) com dois dígitos no mês
     const mesFormatado = String(mesIndex + 1).padStart(2, '0');
     this.dataInicioMes = `01/${mesFormatado}/${ano}`;
 
-    // Calcula dinamicamente o último dia do mês atual
     const ultimoDia = new Date(ano, mesIndex + 1, 0).getDate();
     this.dataFimMes = `${String(ultimoDia).padStart(2, '0')}/${mesFormatado}/${ano}`;
 
-    // Valida se o período visualizado corresponde ao mês corrente no relógio
     const hoje = new Date();
-    if (ano === hoje.getFullYear() && mesIndex === hoje.getMonth()) {
-      this.statusMesTexto = 'Mês Atual';
-    } else {
-      this.statusMesTexto = ''; 
-    }
+    this.statusMesTexto = (ano === hoje.getFullYear() && mesIndex === hoje.getMonth()) ? 'Mês Atual' : '';
   }
 
-  /**
-   * Navega entre os meses pelas setas avançar/retroceder
-   */
   mudarMes(direcao: number) {
     this.dataAncorada.setMonth(this.dataAncorada.getMonth() + direcao);
     this.inicializarSeletorData();
-    this.carregarDados(); // Recarrega aplicando os filtros ao novo mês se necessário
+    this.carregarDados(); 
   }
 
-  /**
-   * Carrega as informações e atualiza a interface
-   */
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
-    this.contas = this.contasService.buscarContas();
+    
+    // 1. MODIFICAÇÃO: Carrega e calcula o Saldo Geral vindo exclusivamente das entradas deste usuário
+    this.carregarSaldoDasEntradas();
+
+    // 2. MODIFICAÇÃO: Busca os Gastos do LocalStorage Geral filtrando pelo usuário ativo
+    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    this.contas = todasContasGeral.filter((conta: any) => conta.usuario === this.nomeUsuario);
     
     this.atualizarStatusPorData();
     this.calcularTotal();
@@ -164,8 +151,18 @@ export class CasaPage implements OnInit {
   }
 
   /**
-   * Compara as datas das contas com o dia de hoje para atualizar pendências e vencimentos
+   * Busca os registros na chave das entradas e filtra pelo usuário logado para obter o valor somado
    */
+  carregarSaldoDasEntradas() {
+    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
+    const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
+    this.totalEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+  }
+
+  alternarVisibilidadeSaldo() {
+    this.exibirSaldo = !this.exibirSaldo;
+  }
+
   atualizarStatusPorData() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -184,24 +181,15 @@ export class CasaPage implements OnInit {
     });
   }
 
-  /**
-   * Filtra as contas visíveis nos cards
-   */
   filtrar(status: 'pago' | 'pendente' | 'vencido') {
     this.filtroAtivo = status;
     this.contasFiltradas = this.contas.filter(c => c.status === status);
   }
 
-  /**
-   * Calcula o somatório total de gastos mapeados
-   */
   calcularTotal() {
     this.totalGastos = this.contas.reduce((acc, conta) => acc + conta.valor, 0);
   }
 
-  /**
-   * Controla a abertura e fechamento do formulário Modal
-   */
   abrirModal(abrir: boolean) {
     this.isModalAberto = abrir;
     if (!abrir) {
@@ -209,53 +197,51 @@ export class CasaPage implements OnInit {
     }
   }
 
-  /**
-   * Adiciona um novo item vindo do Modal
-   */
   adicionarGasto() {
     if (!this.novaConta.titulo || !this.novaConta.valor || !this.novaConta.vencimento) {
       alert('Por favor, preencha todos os campos!');
       return;
     }
 
-    const nova: Conta = {
+    // MODIFICAÇÃO: Vincula o novo gasto ao usuário atual da conta
+    const nova = {
       id: Date.now(),
+      usuario: this.nomeUsuario, 
       titulo: this.novaConta.titulo,
       valor: Number(this.novaConta.valor),
       vencimento: this.novaConta.vencimento, 
       status: 'pendente' 
     };
 
-    this.contas.push(nova);
-    this.contasService.salvarContas(this.contas);
+    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    todasContasGeral.push(nova);
+    
+    // Salva na lista centralizada do dispositivo
+    localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
+    
     this.carregarDados();
     this.abrirModal(false);
   }
 
-  /**
-   * Altera o status da conta para pago
-   */
   marcarComoPago(id: number) {
-    const index = this.contas.findIndex(c => c.id === id);
+    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    const index = todasContasGeral.findIndex((c: any) => c.id === id);
+    
     if (index !== -1) {
-      this.contas[index].status = 'pago';
-      this.contasService.salvarContas(this.contas);
+      todasContasGeral[index].status = 'pago';
+      localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
       this.carregarDados();
     }
   }
 
-  /**
-   * Remove permanentemente a conta
-   */
   excluirConta(id: number) {
-    this.contas = this.contas.filter(c => c.id !== id);
-    this.contasService.salvarContas(this.contas);
+    let todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    todasContasGeral = todasContasGeral.filter((c: any) => c.id !== id);
+    
+    localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
     this.carregarDados();
   }
 
-  /**
-   * Simula o clique no input do tipo file oculto quando o usuário clica no avatar
-   */
   dispararSeletorArquivo() {
     const elementoInput = document.getElementById('seletorArquivo') as HTMLInputElement;
     if (elementoInput) {
@@ -263,21 +249,14 @@ export class CasaPage implements OnInit {
     }
   }
 
-  /**
-   * Processa a foto selecionada e converte em Base64 para exibir na tela e salvar localmente
-   */
   aoSelecionarFoto(event: any) {
     const arquivo = event.target.files[0];
-    
     if (arquivo) {
       const reader = new FileReader();
-      
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        // Salva a foto em formato string no armazenamento local do navegador
         localStorage.setItem('foto_usuario', this.fotoUsuario);
       };
-      
       reader.readAsDataURL(arquivo);
     }
   }

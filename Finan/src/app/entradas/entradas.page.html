@@ -10,18 +10,20 @@
         <h1>{{ nomeUsuario }}</h1>
       </ion-label>
       <ion-icon 
-  name="settings-outline" 
-  slot="end" 
-  color="light" 
-  routerLink="/configuracoes">
-</ion-icon>
+        name="settings-outline" 
+        slot="end" 
+        color="light" 
+        routerLink="/configuracoes">
+      </ion-icon>
     </ion-item>
     
     <div class="saldo-container">
       <p>Saldo geral</p>
-      <div class="saldo-row">
-        <span>********</span>
-        <ion-icon name="eye-off-outline"></ion-icon>
+      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()">
+        <span *ngIf="!exibirSaldo">********</span>
+        <span *ngIf="exibirSaldo" class="valor-saldo-geral">{{ totalEntradas | currency:'BRL' }}</span>
+        
+        <ion-icon [name]="exibirSaldo ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
       </div>
     </div>
   </div>
@@ -78,44 +80,43 @@
     <p class="empty-msg" *ngIf="entradasFiltradas.length === 0">Nenhuma entrada encontrada.</p>
   </div>
 
- <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)" class="modal-customizado">
-  <ng-template>
-    <div class="modal-wrapper">
-      
-      <div class="modal-header">
-        <span class="espacador-esquerda"></span> <h2>Nova Entrada</h2>
-        <button class="btn-fechar" (click)="abrirModal(false)">X</button>
-      </div>
-
-      <div class="modal-body">
+  <ion-modal [isOpen]="isModalAberto" (didDismiss)="abrirModal(false)" class="modal-customizado">
+    <ng-template>
+      <div class="modal-wrapper">
         
-        <div class="input-group">
-          <label>Nome</label>
-          <input type="text" placeholder="Ex: Aluguel" [(ngModel)]="novaEntrada.titulo">
+        <div class="modal-header">
+          <span class="espacador-esquerda"></span> 
+          <h2>Nova Entrada</h2>
+          <button class="btn-fechar" (click)="abrirModal(false)">X</button>
         </div>
 
-        <div class="input-group">
-          <label>Valor</label>
-          <input type="number" placeholder="0.00" [(ngModel)]="novaEntrada.valor">
-        </div>
-
-        <div class="input-group">
-          <label>Tipo</label>
-          <div class="select-container">
-            <select [(ngModel)]="novaEntrada.categoria">
-              <option value="Salário" selected>Salário</option>
-              <option value="Freela">Freela</option>
-              <option value="Outros">Outros</option>
-            </select>
+        <div class="modal-body">
+          <div class="input-group">
+            <label>Nome</label>
+            <input type="text" placeholder="Ex: Aluguel" [(ngModel)]="novaEntrada.titulo">
           </div>
-        </div>
 
-        <button class="btn-adicionar-gasto" (click)="adicionarEntrada()">Adicionar</button>
-        
+          <div class="input-group">
+            <label>Valor</label>
+            <input type="number" placeholder="0.00" [(ngModel)]="novaEntrada.valor">
+          </div>
+
+          <div class="input-group">
+            <label>Tipo</label>
+            <div class="select-container">
+              <select [(ngModel)]="novaEntrada.categoria">
+                <option value="Salário">Salário</option>
+                <option value="Freela">Freela</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-adicionar-gasto" (click)="adicionarEntrada()">Adicionar</button>
+        </div>
       </div>
-    </div>
-  </ng-template>
-</ion-modal>
+    </ng-template>
+  </ion-modal>
 </ion-content>
 
 <ion-footer class="ion-no-border">
