@@ -19,7 +19,7 @@
     
     <div class="saldo-container">
       <p>Saldo geral</p>
-      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()">
+      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()" style="cursor: pointer;">
         <span *ngIf="!exibirSaldo">********</span>
         <span *ngIf="exibirSaldo" class="valor-saldo-geral">{{ totalEntradas | currency:'BRL' }}</span>
         
@@ -45,23 +45,28 @@
   </div>
 
   <div class="meses-lista-container">
-    <div *ngFor="let item of dadosMeses" class="card-mes-acumulado" [style.background]="item.corFundo">
-      <span class="nome-mes">{{ item.mes }}</span>
-      <span class="valor-mes">{{ item.gastos | currency:'BRL' }}</span>
-    </div>
+    <ng-container *ngFor="let item of dadosMeses">
+      <div class="card-mes-acumulado" [style.background]="item.corFundo" *ngIf="item.gastos > 0">
+        <span class="nome-mes">{{ item.mes }}</span>
+        <span class="valor-mes">{{ item.gastos | currency:'BRL' }}</span>
+      </div>
+    </ng-container>
   </div>
 
   <div class="grafico-geral-container">
     <h3>Gastos dos meses</h3>
     
-    <div class="barras-wrapper">
-      <div *ngFor="let item of dadosMeses" class="coluna-grafico-item">
+    <div class="barras-wrapper" style="overflow-x: auto; display: flex; align-items: flex-end; padding-bottom: 8px;">
+      <div *ngFor="let item of dadosMeses" class="coluna-grafico-item" style="flex: 1; min-width: 45px; display: flex; flex-direction: column; align-items: center;">
         <div class="barra-preenchimento" 
              [style.height]="calcularAlturaBarra(item.gastos) + 'px'"
-             [style.background]="item.corFundo">
+             [style.background]="item.corFundo"
+             style="width: 24px; border-radius: 4px 4px 0 0; transition: height 0.3s ease-in-out;">
         </div>
-        <span class="legenda-mes">{{ item.mes }}</span>
-        <span class="legenda-valor">{{ item.gastos | currency:'BRL':'symbol':'1.0-0' }}</span>
+        <span class="legenda-mes" style="font-size: 0.75rem; margin-top: 6px;">{{ item.mes.substring(0,3) }}</span>
+        <span class="legenda-valor" style="font-size: 0.7rem; font-weight: bold;" *ngIf="item.gastos > 0">
+          {{ item.gastos | currency:'BRL':'symbol':'1.0-0' }}
+        </span>
       </div>
     </div>
   </div>
