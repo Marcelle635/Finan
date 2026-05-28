@@ -1,6 +1,6 @@
 // Customização do Header Roxo
 .toolbar-purple {
-  --background: #b95be6; // Tom de roxo correspondente à imagem noso.PNG
+  --background: #a349d5; // Tom de roxo correspondente à imagem noso.PNG
   --color: #ffffff;
   
   ion-title {
@@ -16,7 +16,7 @@
 
 // Fundo da página sutilmente lilás/claro
 .bg-notificacoes {
-  --background: #fbf7fc;
+  --background: hsl(265, 100%, 97%);
 }
 
 .lista-custom {
