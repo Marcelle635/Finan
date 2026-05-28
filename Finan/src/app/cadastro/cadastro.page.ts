@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router'; // CORRIGIDO: Importado RouterLink
 import { 
   IonContent, 
   IonItem, 
@@ -9,9 +9,9 @@ import {
   IonInput, 
   IonButton, 
   IonIcon,
-  IonHeader,   // Adicionado para resolver o erro
-  IonToolbar,  // Adicionado para resolver o erro
-  IonTitle,    // Adicionado para resolver o erro
+  IonHeader,   
+  IonToolbar,  
+  IonTitle,    
   ToastController 
 } from '@ionic/angular/standalone';
 
@@ -28,15 +28,16 @@ import { mailOutline, lockClosedOutline, personOutline } from 'ionicons/icons';
   imports: [
     CommonModule, 
     FormsModule,
+    RouterLink, // CORRIGIDO: Adicionado aqui para funcionar links no HTML
     IonContent, 
     IonItem, 
     IonLabel, 
     IonInput, 
     IonButton,
     IonIcon,
-    IonHeader,   // IMPORTANTE: Adicionado aqui também
-    IonToolbar,  // IMPORTANTE: Adicionado aqui também
-    IonTitle     // IMPORTANTE: Adicionado aqui também
+    IonHeader,   
+    IonToolbar,  
+    IonTitle     
   ]
 })
 export class CadastroPage {
@@ -64,12 +65,25 @@ export class CadastroPage {
     }
 
     try {
+      // 1. Cadastra no Firebase
       await this.authService.cadastrar(this.usuario.email, this.usuario.senha);
+      
+      // 2. Salva o nome no seu serviço de contas
       this.contasService.salvarUsuario(this.usuario.nome);
+
+      // CORREÇÃO MÁGICA: Alimenta a lista local para a recuperação de senha funcionar!
+      const usuariosLocais = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
+      usuariosLocais.push({
+        nome: this.usuario.nome,
+        email: this.usuario.email,
+        senha: this.usuario.senha // Mantém atualizado para validação local posterior
+      });
+      localStorage.setItem('app_usuarios_cadastrados', JSON.stringify(usuariosLocais));
+
       this.exibirToast('Cadastro realizado com sucesso!', 'success');
       this.router.navigate(['/login']); 
     } catch (error: any) {
-      console.error("ERRO COMPLETO:", error); // Isso ajuda a ver o erro no F12
+      console.error("ERRO COMPLETO:", error);
       this.tratarErro(error.code);
     }
   }

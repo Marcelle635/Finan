@@ -3,14 +3,13 @@ ion-content {
 }
 
 .background-wrapper {
-  // Substitua pelo caminho da sua imagem de ícones tecnológicos
   background: url('../../assets/pagina.png') no-repeat center center / cover;
   height: 100%;
   width: 100%;
 }
 
 .overlay {
-  background: rgba(0, 0, 0, 0.85); // Tom escuro profundo para destacar o conteúdo
+  background: rgba(0, 0, 0, 0.85); 
   height: 100%;
   display: flex;
   align-items: center;
@@ -22,26 +21,32 @@ ion-content {
   width: 100%;
   max-width: 360px;
   padding: 40px 25px;
-  border: 1.5px solid #ffffff; // Borda fina branca ao redor do card
+  border: 1.5px solid #ffffff; 
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.5); // Fundo translúcido
+  background: rgba(0, 0, 0, 0.5); 
   text-align: center;
 
   h1 {
     color: #fff;
     font-size: 22px;
     font-weight: 800;
-    margin-bottom: 35px;
+    margin-bottom: 25px;
     letter-spacing: 1px;
+  }
+
+  .txt-ajuda {
+    color: #b0b5bc;
+    font-size: 13px;
+    margin-bottom: 25px;
+    line-height: 1.4;
   }
 }
 
-// Botão estilo Google
 .google-auth-container {
-  margin-bottom: 50px;
+  margin-bottom: 40px;
   
   .google-btn {
-    background: #5d5d5d; // Tom de cinza da imagem
+    background: #5d5d5d; 
     color: white;
     border: none;
     border-radius: 8px;
@@ -61,7 +66,7 @@ ion-content {
 }
 
 .form-container {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   text-align: left;
 
   .custom-input {
@@ -69,7 +74,7 @@ ion-content {
     --color: #fff;
     --padding-start: 0;
     margin-bottom: 20px;
-    border-bottom: 2px solid #fff; // Linha branca característica
+    border-bottom: 2px solid #fff; 
 
     ion-label {
       color: #fff !important;
@@ -81,11 +86,41 @@ ion-content {
 }
 
 .btn-entrar {
-  --background: #41969e; // Cor verde-água (Teal) do botão
+  --background: #41969e; 
   --color: #fff;
   --border-radius: 12px;
   font-weight: bold;
   height: 55px;
   font-size: 18px;
   margin-top: 10px;
+}
+
+// Estilização das opções de rodapé (Cadastre-se e Esqueceu a senha)
+.links-footer {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  .link-acao {
+    color: #ffffff;
+    font-weight: bold;
+  }
+
+  .link-esqueceu {
+    color: #41969e; // Cor azul/verde água do link de recuperação
+    font-weight: 600;
+  }
 }

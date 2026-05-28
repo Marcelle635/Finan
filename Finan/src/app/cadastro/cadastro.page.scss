@@ -72,3 +72,19 @@ ion-content {
   margin-top: 20px;
   text-transform: none; // Evita que o texto fique todo em maiúsculo
 }
+.links-footer {
+  margin-top: 20px;
+  text-align: center;
+
+  .link-voltar {
+    color: #41969e; // Mesmo tom verde-água/azul do botão de entrar
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
