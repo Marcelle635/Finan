@@ -41,5 +41,9 @@ export const routes: Routes = [
   {
     path: 'notificacoes',
     loadComponent: () => import('./notificacoes/notificacoes.page').then( m => m.NotificacoesPage)
+  },
+  {
+    path: 'alterar-senha',
+    loadComponent: () => import('./alterar-senha/alterar-senha.page').then( m => m.AlterarSenhaPage)
   }
 ];

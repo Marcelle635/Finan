@@ -1,0 +1,95 @@
+// Header Roxo no mesmo padrão do app
+.toolbar-purple {
+  --background: #b95be6; 
+  --color: #ffffff;
+  
+  ion-title {
+    font-weight: bold;
+    font-size: 22px;
+    padding-inline-start: 10px;
+  }
+  
+  ion-back-button {
+    --color: #ffffff;
+  }
+}
+
+// Fundo sutilmente lilás/claro
+.bg-alterar-senha {
+  --background: #fbf7fc;
+}
+
+// Centralização do card na tela
+.container-central {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80%;
+  padding: 20px;
+}
+
+// Card cinza com a característica borda azul celeste
+.card-formulario {
+  width: 100%;
+  max-width: 340px;
+  background-color: #d9d9d9; // Cor de fundo cinza da imagem
+  border: 3px solid #2196f3; // Borda azul viva
+  border-radius: 16px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+// Estrutura customizada dos inputs brancos
+.input-customizado {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 0 15px;
+  height: 55px;
+
+  input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    color: #4f4f4f;
+    padding-right: 35px;
+
+    &::placeholder {
+      color: #9e9e9e;
+    }
+  }
+
+  ion-icon {
+    position: absolute;
+    right: 15px;
+    font-size: 22px;
+    color: #34495e; // Cor do olho riscado
+    cursor: pointer;
+  }
+}
+
+// Botão roxo arredondado interno
+.btn-submeter {
+  background-color: #b95be6;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+
+  &:active {
+    transform: scale(0.98);
+    background-color: #a443d1;
+  }
+}

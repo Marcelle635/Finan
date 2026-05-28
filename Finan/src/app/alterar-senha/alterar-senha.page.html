@@ -1,0 +1,46 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="toolbar-purple">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/configuracoes" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Alterar senha</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-alterar-senha">
+  <div class="container-central">
+    
+    <div class="card-formulario">
+      
+      <div class="input-customizado">
+        <input 
+          [type]="exibirNovaSenha ? 'text' : 'password'" 
+          placeholder="Nova senha" 
+          [(ngModel)]="novaSenha" 
+        />
+        <ion-icon 
+          [name]="exibirNovaSenha ? 'eye-outline' : 'eye-off-outline'" 
+          (click)="exibirNovaSenha = !exibirNovaSenha">
+        </ion-icon>
+      </div>
+
+      <div class="input-customizado">
+        <input 
+          [type]="exibirConfirmarSenha ? 'text' : 'password'" 
+          placeholder="Confirmar nova senha" 
+          [(ngModel)]="confirmarNovaSenha" 
+        />
+        <ion-icon 
+          [name]="exibirConfirmarSenha ? 'eye-outline' : 'eye-off-outline'" 
+          (click)="exibirConfirmarSenha = !exibirConfirmarSenha">
+        </ion-icon>
+      </div>
+
+      <button class="btn-submeter" (click)="alterarSenha()">
+        Alterar senha
+      </button>
+
+    </div>
+
+  </div>
+</ion-content>

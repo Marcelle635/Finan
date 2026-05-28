@@ -42,7 +42,7 @@ export class ConfiguracoesPage implements OnInit {
 
   constructor(
     private contasService: ContasService,
-    private router: Router // Já injetado corretamente
+    private router: Router 
   ) {
     addIcons({ 
       settings, 
@@ -57,14 +57,12 @@ export class ConfiguracoesPage implements OnInit {
   }
 
   irParaNotificacoes() {
-    // MODIFICADO: Agora redireciona dinamicamente para a página de notificações
     this.router.navigate(['/notificacoes']);
   }
 
   irParaAlterarSenha() {
-    // Pronto para quando você criar a página de alterar senha:
-    // this.router.navigate(['/alterar-senha']);
-    console.log('Navegar para alteração de senha');
+    // MODIFICADO: Descomentado e configurado para navegar para a tela de alterar-senha
+    this.router.navigate(['/alterar-senha']);
   }
 
   logout() {
