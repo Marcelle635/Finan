@@ -1,0 +1,78 @@
+// Customização do Header Roxo
+.toolbar-purple {
+  --background: #b95be6; // Tom de roxo correspondente à imagem noso.PNG
+  --color: #ffffff;
+  
+  ion-title {
+    font-weight: bold;
+    font-size: 22px;
+    padding-inline-start: 10px;
+  }
+  
+  ion-back-button {
+    --color: #ffffff;
+  }
+}
+
+// Fundo da página sutilmente lilás/claro
+.bg-notificacoes {
+  --background: #fbf7fc;
+}
+
+.lista-custom {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+
+  // Força os itens a terem o fundo correto da página
+  ion-item {
+    --background: #fbf7fc;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --inner-padding-top: 15px;
+    --inner-padding-bottom: 15px;
+    --border-color: #d1cbd4; // Cor da linha divisória fina da imagem
+  }
+}
+
+// Estilização do ícone de chat em degradê roxo igual ao protótipo
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #a36cf4, #7842ce);
+  padding: 10px;
+  border-radius: 8px;
+  margin-right: 8px;
+
+  ion-icon {
+    font-size: 24px;
+    color: #ffffff;
+  }
+}
+
+// Textos das notificações
+ion-label {
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 4px;
+  }
+
+  p {
+    font-size: 13px;
+    color: #555555;
+    white-space: normal; // Permite quebra de linha caso o texto cresça
+    line-height: 1.3;
+  }
+}
+
+// Mensagem amigável para caixa vazia
+.empty-state {
+  text-align: center;
+  margin-top: 50px;
+  color: #888888;
+  font-size: 15px;
+  font-style: italic;
+}

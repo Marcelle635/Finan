@@ -1,0 +1,31 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="toolbar-purple">
+    <ion-buttons slot="start">
+      <!-- Botão voltar padrão do Ionic que simula a seta da imagem -->
+      <ion-back-button defaultHref="/casa" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Notificação</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-notificacoes">
+  <ion-list lines="full" class="lista-custom">
+    
+    <!-- Renderiza as notificações dinâmicas -->
+    <ion-item *ngFor="let notif of notificacoes" class="item-notificacao">
+      <div class="icon-container" slot="start">
+        <ion-icon name="chatbubble"></ion-icon>
+      </div>
+      <ion-label>
+        <h2>{{ notif.titulo }}</h2>
+        <p>{{ notif.mensagem }}</p>
+      </ion-label>
+    </ion-item>
+
+    <!-- Caso não haja nenhuma conta a vencer em 1 ou 3 dias -->
+    <div *ngIf="notificacoes.length === 0" class="empty-state">
+      <p>Nenhuma notificação para os próximos dias.</p>
+    </div>
+
+  </ion-list>
+</ion-content>
