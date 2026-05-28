@@ -1,6 +1,6 @@
 // Header Roxo no mesmo padrão do app
 .toolbar-purple {
-  --background: #b95be6; 
+  --background: #a349d5; 
   --color: #ffffff;
   
   ion-title {
@@ -16,7 +16,7 @@
 
 // Fundo sutilmente lilás/claro
 .bg-alterar-senha {
-  --background: #fbf7fc;
+  --background: hsl(265, 100%, 97%);
 }
 
 // Centralização do card na tela
@@ -33,7 +33,7 @@
   width: 100%;
   max-width: 340px;
   background-color: #d9d9d9; // Cor de fundo cinza da imagem
-  border: 3px solid #2196f3; // Borda azul viva
+  border: 3px solid #a349d5; // Borda azul viva
   border-radius: 16px;
   padding: 40px 20px;
   display: flex;
