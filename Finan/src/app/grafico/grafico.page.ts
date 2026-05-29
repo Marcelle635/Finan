@@ -101,12 +101,14 @@ export class GraficoPage implements OnInit {
   }
 
   carregarDados() {
+    const usuarioLogadoApp = localStorage.getItem('usuario_logado');
+    const nomeLocalService = this.contasService.buscarUsuario();
     const firebaseUser = this.authService.obterAuth.currentUser;
-    const nomeLocal = this.contasService.buscarUsuario();
     
-    // 👇 CORREÇÃO: Alinha as prioridades com as páginas Casa e Entradas
-    if (nomeLocal && !nomeLocal.includes('@')) {
-      this.nomeUsuario = nomeLocal;
+    if (usuarioLogadoApp && !usuarioLogadoApp.includes('@')) {
+      this.nomeUsuario = usuarioLogadoApp;
+    } else if (nomeLocalService && !nomeLocalService.includes('@')) {
+      this.nomeUsuario = nomeLocalService;
     } else if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (firebaseUser && firebaseUser.email) {
@@ -115,10 +117,8 @@ export class GraficoPage implements OnInit {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola e formata o primeiro nome para a interface
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
     
-    // Configura a chave da foto unificada baseado no nome do usuário ativo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
@@ -129,7 +129,6 @@ export class GraficoPage implements OnInit {
 
   sincronizarContasAntigas() {
     const historicoDefinitivo = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
-    
     if (historicoDefinitivo.length === 0) {
       const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
       if (todasContasGeral.length > 0) {
@@ -143,7 +142,6 @@ export class GraficoPage implements OnInit {
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
-    
     const hoje = new Date();
     const ano = this.dataAncorada.getFullYear();
     const mesIndex = this.dataAncorada.getMonth();
@@ -169,7 +167,6 @@ export class GraficoPage implements OnInit {
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
-    
     const cores = ['#E9C7FF', '#CE8BFF', '#B550FF', '#9E24FF'];
     const historicoDefinitivo = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
     const anoSelecionado = this.dataAncorada.getFullYear();
@@ -195,7 +192,6 @@ export class GraficoPage implements OnInit {
         corFundo: cores[i % cores.length] 
       });
     }
-
     this.dadosMeses = resultadoAgrupado;
   }
 
@@ -220,7 +216,6 @@ export class GraficoPage implements OnInit {
   calcularAlturaBarra(gasto: number): number {
     const todosGastos = this.dadosMeses.map(m => m.gastos);
     const maiorGasto = Math.max(...todosGastos);
-    
     if (maiorGasto === 0) return 0;
     
     const alturaMaximaPx = 140; 
@@ -236,18 +231,14 @@ export class GraficoPage implements OnInit {
           icon: 'image-outline',
           handler: () => {
             const elementoInput = document.getElementById('seletorArquivoGrafico') as HTMLInputElement;
-            if (elementoInput) {
-              elementoInput.click();
-            }
+            if (elementoInput) elementoInput.click();
           }
         },
         {
           text: 'Deixar Sem Foto',
           role: 'destructive',
           icon: 'trash-outline',
-          handler: () => {
-            this.removerFoto();
-          }
+          handler: () => this.removerFoto()
         },
         {
           text: 'Cancelar',
@@ -265,7 +256,6 @@ export class GraficoPage implements OnInit {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        
         const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
         localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
       };

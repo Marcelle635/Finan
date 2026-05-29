@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core'; // Adicionado OnDestroy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -39,6 +39,7 @@ import {
   closeOutline      
 } from 'ionicons/icons';
 import { inject } from '@angular/core';
+import { Subscription } from 'rxjs'; // Adicionado para gerenciar o listener
 
 @Component({
   selector: 'app-casa',
@@ -64,10 +65,11 @@ import { inject } from '@angular/core';
     IonModal
   ]
 })
-export class CasaPage implements OnInit {
+export class CasaPage implements OnInit, OnDestroy {
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
+  private authSubscription!: Subscription;
 
   nomeUsuario: string = '';
   primeiroNome: string = '';
@@ -116,11 +118,27 @@ export class CasaPage implements OnInit {
 
   ngOnInit() {
     this.inicializarSeletorData();
-    this.carregarDados();
+
+    // MONITORAMENTO EM TEMPO REAL: Se o Firebase mudar de conta, reatualiza instantaneamente
+    if (this.authService.obterAuth) {
+      this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
+        this.carregarDados(firebaseUser);
+      });
+    } else {
+      this.carregarDados(null);
+    }
   }
 
   ionViewWillEnter() {
-    this.carregarDados();
+    const firebaseUser = this.authService.obterAuth?.currentUser;
+    this.carregarDados(firebaseUser);
+  }
+
+  ngOnDestroy() {
+    // Evita vazamento de memória se houver subscriptions pendentes
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
   }
 
   inicializarSeletorData() {
@@ -145,31 +163,32 @@ export class CasaPage implements OnInit {
   mudarMes(direcao: number) {
     this.dataAncorada.setMonth(this.dataAncorada.getMonth() + direcao);
     this.inicializarSeletorData();
-    this.carregarDados(); 
+    const firebaseUser = this.authService.obterAuth?.currentUser;
+    this.carregarDados(firebaseUser); 
   }
 
-  carregarDados() {
-    const firebaseUser = this.authService.obterAuth.currentUser;
+  carregarDados(firebaseUser: any | null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // CORREÇÃO: Dá prioridade ao nome local salvo ou ao displayName do Google. Se nenhum existir, usa o prefixo do e-mail.
-    if (nomeLocal && !nomeLocal.includes('@')) {
-      this.nomeUsuario = nomeLocal;
-    } else if (firebaseUser && firebaseUser.displayName) {
+    // Identifica quem está logado no momento
+    if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
+    } else if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
     } else if (firebaseUser && firebaseUser.email) {
       this.nomeUsuario = firebaseUser.email.split('@')[0];
     } else {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola o primeiro nome limpando espaços extras
-    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+    // Garante que o primeiro nome seja isolado sem quebras
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
 
-    // CORREÇÃO EFETUADA: Caractere oculto '夹' removido completamente desta linha
+    // Busca a foto específica vinculada à conta atual
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
 
+    // Recarrega as contas e financeiros baseados no novo nome detectado
     this.carregarSaldoDasEntradas();
 
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
@@ -270,7 +289,8 @@ export class CasaPage implements OnInit {
     this.dataAncorada = new Date(Number(anoGasto), Number(mesGasto) - 1, 1);
     
     this.inicializarSeletorData();
-    this.carregarDados();
+    const firebaseUser = this.authService.obterAuth?.currentUser;
+    this.carregarDados(firebaseUser);
     this.abrirModal(false);
   }
 
@@ -282,7 +302,8 @@ export class CasaPage implements OnInit {
       todasContasGeral[index].status = 'pago';
       localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
       this.salvarNoHistoricoDefinitivo(todasContasGeral[index]);
-      this.carregarDados();
+      const firebaseUser = this.authService.obterAuth?.currentUser;
+      this.carregarDados(firebaseUser);
     }
   }
 
@@ -304,7 +325,8 @@ export class CasaPage implements OnInit {
     todasContasGeral = todasContasGeral.filter((c: any) => c.id !== id);
     
     localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
-    this.carregarDados();
+    const firebaseUser = this.authService.obterAuth?.currentUser;
+    this.carregarDados(firebaseUser);
   }
 
   async dispararSeletorArquivo() {

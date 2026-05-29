@@ -125,12 +125,14 @@ export class DesejosPage implements OnInit {
   }
 
   carregarDados() {
+    const usuarioLogadoApp = localStorage.getItem('usuario_logado');
+    const nomeLocalService = this.contasService.buscarUsuario();
     const firebaseUser = this.authService.obterAuth.currentUser;
-    const nomeLocal = this.contasService.buscarUsuario();
     
-    // 👇 CORREÇÃO: Alinhando a prioridade de busca do usuário com as outras páginas
-    if (nomeLocal && !nomeLocal.includes('@')) {
-      this.nomeUsuario = nomeLocal;
+    if (usuarioLogadoApp && !usuarioLogadoApp.includes('@')) {
+      this.nomeUsuario = usuarioLogadoApp;
+    } else if (nomeLocalService && !nomeLocalService.includes('@')) {
+      this.nomeUsuario = nomeLocalService;
     } else if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (firebaseUser && firebaseUser.email) {
@@ -139,10 +141,8 @@ export class DesejosPage implements OnInit {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola o primeiro nome para exibir de forma limpa na interface
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
     
-    // Busca a foto de perfil vinculada a esta conta específica
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
@@ -237,7 +237,6 @@ export class DesejosPage implements OnInit {
     };
 
     this.desejosFiltrados.push(novoItem);
-    
     this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
     this.abrirModal(false);
@@ -245,14 +244,12 @@ export class DesejosPage implements OnInit {
 
   alternarStatusDesejo(desejo: any) {
     desejo.conquistado = !desejo.conquistado;
-    
     this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
   }
 
   excluirDesejo(id: number) {
     this.desejosFiltrados = this.desejosFiltrados.filter(d => d.id !== id);
-    
     this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
   }
@@ -266,18 +263,14 @@ export class DesejosPage implements OnInit {
           icon: 'image-outline',
           handler: () => {
             const elementoInput = document.getElementById('seletorArquivoDesejos') as HTMLInputElement;
-            if (elementoInput) {
-              elementoInput.click();
-            }
+            if (elementoInput) elementoInput.click();
           }
         },
         {
           text: 'Deixar Sem Foto',
           role: 'destructive',
           icon: 'trash-outline',
-          handler: () => {
-            this.removerFoto();
-          }
+          handler: () => this.removerFoto()
         },
         {
           text: 'Cancelar',
@@ -295,7 +288,6 @@ export class DesejosPage implements OnInit {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        
         const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
         localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
       };

@@ -73,12 +73,14 @@ export class ConfiguracoesPage implements OnInit {
   }
 
   carregarDadosUsuario() {
+    const usuarioLogadoApp = localStorage.getItem('usuario_logado');
+    const nomeLocalService = this.contasService.buscarUsuario();
     const firebaseUser = this.authService.obterAuth.currentUser;
-    const nomeLocal = this.contasService.buscarUsuario();
     
-    // 👇 CORREÇÃO: Mantém a mesma hierarquia segura de nome de usuário das outras abas
-    if (nomeLocal && !nomeLocal.includes('@')) {
-      this.nomeUsuario = nomeLocal;
+    if (usuarioLogadoApp && !usuarioLogadoApp.includes('@')) {
+      this.nomeUsuario = usuarioLogadoApp;
+    } else if (nomeLocalService && !nomeLocalService.includes('@')) {
+      this.nomeUsuario = nomeLocalService;
     } else if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (firebaseUser && firebaseUser.email) {
@@ -87,10 +89,8 @@ export class ConfiguracoesPage implements OnInit {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola o primeiro nome para a interface
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
     
-    // Sincroniza a foto de perfil com a chave correta baseada no usuário atual
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
   }
@@ -122,18 +122,14 @@ export class ConfiguracoesPage implements OnInit {
           icon: 'image-outline',
           handler: () => {
             const elementoInput = document.getElementById('seletorArquivoConfig') as HTMLInputElement;
-            if (elementoInput) {
-              elementoInput.click();
-            }
+            if (elementoInput) elementoInput.click();
           }
         },
         {
           text: 'Deixar Sem Foto',
           role: 'destructive',
           icon: 'trash-outline',
-          handler: () => {
-            this.removerFoto();
-          }
+          handler: () => this.removerFoto()
         },
         {
           text: 'Cancelar',
@@ -151,7 +147,6 @@ export class ConfiguracoesPage implements OnInit {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        
         const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
         localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
       };

@@ -38,7 +38,6 @@ export class LoginPage {
   private router = inject(Router);
   private toastCtrl = inject(ToastController);
 
-  // Controla se exibe o formulário de Login ou de Recuperação
   passoLogin: 'login' | 'verificarEmail' = 'login';
 
   usuario = {
@@ -59,7 +58,19 @@ export class LoginPage {
     }
 
     try {
-      await this.authService.login(this.usuario.email, this.usuario.senha);
+      const credencial = await this.authService.login(this.usuario.email, this.usuario.senha);
+      
+      const usuariosCadastrados = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
+      const usuarioEncontrado = usuariosCadastrados.find((u: any) => u.email.toLowerCase() === this.usuario.email.toLowerCase());
+
+      if (usuarioEncontrado && usuarioEncontrado.nome) {
+        localStorage.setItem('usuario_logado', usuarioEncontrado.nome);
+      } else if (credencial?.user?.displayName) {
+        localStorage.setItem('usuario_logado', credencial.user.displayName);
+      } else {
+        localStorage.setItem('usuario_logado', this.usuario.email.split('@')[0]);
+      }
+
       await this.exibirToast('Bem-vindo!', 'success');
       this.router.navigate(['/casa']);
     } catch (error: any) {
@@ -69,7 +80,14 @@ export class LoginPage {
 
   async loginComGoogle() {
     try {
-      await this.authService.loginComGoogle();
+      const resultado = await this.authService.loginComGoogle();
+      
+      if (resultado?.user && resultado.user.displayName) {
+        localStorage.setItem('usuario_logado', resultado.user.displayName);
+      } else if (resultado?.user && resultado.user.email) {
+        localStorage.setItem('usuario_logado', resultado.user.email.split('@')[0]);
+      }
+
       await this.exibirToast('Bem-vindo com o Google!', 'success');
       this.router.navigate(['/casa']);
     } catch (error: any) {
@@ -88,7 +106,6 @@ export class LoginPage {
       return;
     }
 
-    // Verifica se o e-mail consta na sua lista mestre local do dispositivo
     const usuariosCadastrados = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
     const usuarioExiste = usuariosCadastrados.find((u: any) => u.email === this.emailRecuperacao);
 
@@ -98,15 +115,10 @@ export class LoginPage {
     }
 
     try {
-      // Dispara o e-mail real usando a função que adicionamos no AuthService
       await this.authService.redefinirSenha(this.emailRecuperacao);
-
       await this.exibirToast('E-mail de redefinição enviado! Verifique sua caixa de entrada.', 'success');
-      
-      // Reseta o estado e volta para a tela de login
       this.emailRecuperacao = '';
       this.passoLogin = 'login';
-
     } catch (error: any) {
       console.error(error);
       await this.exibirToast('Erro ao enviar e-mail de recuperação. Tente novamente.', 'danger');
