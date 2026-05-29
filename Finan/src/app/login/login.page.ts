@@ -38,18 +38,15 @@ export class LoginPage {
   private router = inject(Router);
   private toastCtrl = inject(ToastController);
 
-  // Variável para controlar qual fluxo/passo exibir na tela
-  passoLogin: 'login' | 'verificarEmail' | 'novaSenha' = 'login';
+  // Controla se exibe o formulário de Login ou de Recuperação
+  passoLogin: 'login' | 'verificarEmail' = 'login';
 
   usuario = {
     email: '',
     senha: ''
   };
 
-  // Variáveis para o controle de redefinição
   emailRecuperacao: string = '';
-  novaSenha: string = '';
-  confirmarNovaSenha: string = '';
 
   constructor() {
     addIcons({ mailOutline, lockClosedOutline, logoGoogle });
@@ -85,56 +82,34 @@ export class LoginPage {
     }
   }
 
-  // Verifica se o e-mail existe na base de dados fictícia do localStorage
   async verificarEmailCadastrado() {
     if (!this.emailRecuperacao) {
       await this.exibirToast('Por favor, insira o e-mail.', 'warning');
       return;
     }
 
-    // Adapte aqui para ler a chave onde os usuários cadastrados ficam no seu localStorage
+    // Verifica se o e-mail consta na sua lista mestre local do dispositivo
     const usuariosCadastrados = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
-    
-    // Procura se existe algum usuário com esse e-mail
     const usuarioExiste = usuariosCadastrados.find((u: any) => u.email === this.emailRecuperacao);
 
-    if (usuarioExiste) {
-      await this.exibirToast('E-mail validado! Prossiga criando sua nova senha.', 'success');
-      this.passoLogin = 'novaSenha'; // Avança para a etapa de criação de senha
-    } else {
+    if (!usuarioExiste) {
       await this.exibirToast('Este e-mail não está cadastrado no sistema.', 'danger');
-    }
-  }
-
-  // Salva a nova senha na base do localStorage
-  async salvarNovaSenha() {
-    if (!this.novaSenha || !this.confirmarNovaSenha) {
-      await this.exibirToast('Preencha os campos de senha.', 'warning');
       return;
     }
 
-    if (this.novaSenha !== this.confirmarNovaSenha) {
-      await this.exibirToast('As senhas não coincidem!', 'danger');
-      return;
-    }
+    try {
+      // Dispara o e-mail real usando a função que adicionamos no AuthService
+      await this.authService.redefinirSenha(this.emailRecuperacao);
 
-    // Atualiza a senha do usuário correspondente no localStorage
-    let usuariosCadastrados = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
-    const index = usuariosCadastrados.findIndex((u: any) => u.email === this.emailRecuperacao);
-
-    if (index !== -1) {
-      usuariosCadastrados[index].senha = this.novaSenha;
-      localStorage.setItem('app_usuarios_cadastrados', JSON.stringify(usuariosCadastrados));
+      await this.exibirToast('E-mail de redefinição enviado! Verifique sua caixa de entrada.', 'success');
       
-      await this.exibirToast('Senha alterada com sucesso! Faça seu login.', 'success');
-      
-      // Limpa os campos e retorna ao login original
-      this.novaSenha = '';
-      this.confirmarNovaSenha = '';
+      // Reseta o estado e volta para a tela de login
       this.emailRecuperacao = '';
       this.passoLogin = 'login';
-    } else {
-      await this.exibirToast('Erro crítico ao atualizar senha.', 'danger');
+
+    } catch (error: any) {
+      console.error(error);
+      await this.exibirToast('Erro ao enviar e-mail de recuperação. Tente novamente.', 'danger');
     }
   }
 
@@ -148,7 +123,7 @@ export class LoginPage {
   private async exibirToast(mensagem: string, cor: string) {
     const toast = await this.toastCtrl.create({
       message: mensagem,
-      duration: 2000,
+      duration: 3000,
       color: cor
     });
     await toast.present();

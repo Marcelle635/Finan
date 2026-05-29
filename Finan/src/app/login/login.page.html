@@ -15,12 +15,12 @@
         <div class="form-container">
           <ion-item lines="none" class="custom-input">
             <ion-label position="stacked">E-mail</ion-label>
-            <ion-input type="email" [(ngModel)]="usuario.email"></ion-input>
+            <input type="email" [(ngModel)]="usuario.email" style="width: 100%; border: none; background: transparent; outline: none;" />
           </ion-item>
 
           <ion-item lines="none" class="custom-input">
             <ion-label position="stacked">Senha</ion-label>
-            <ion-input type="password" [(ngModel)]="usuario.senha"></ion-input>
+            <input type="password" [(ngModel)]="usuario.senha" style="width: 100%; border: none; background: transparent; outline: none;" />
           </ion-item>
         </div>
 
@@ -36,46 +36,21 @@
 
       <div class="login-card" *ngIf="passoLogin === 'verificarEmail'">
         <h1>RECUPERAR</h1>
-        <p class="txt-ajuda">Digite o e-mail cadastrado na sua conta para prosseguir.</p>
+        <p class="txt-ajuda">Digite o e-mail cadastrado na sua conta para enviarmos o link de recuperação de senha.</p>
 
         <div class="form-container">
           <ion-item lines="none" class="custom-input">
             <ion-label position="stacked">E-mail Cadastrado</ion-label>
-            <ion-input type="email" [(ngModel)]="emailRecuperacao"></ion-input>
+            <input type="email" [(ngModel)]="emailRecuperacao" style="width: 100%; border: none; background: transparent; outline: none;" />
           </ion-item>
         </div>
 
         <ion-button expand="block" (click)="verificarEmailCadastrado()" class="btn-entrar">
-          Verificar E-mail
+          Enviar Link de Recuperação
         </ion-button>
 
         <div class="links-footer">
           <p class="link-esqueceu" (click)="passoLogin = 'login'">Voltar para o Login</p>
-        </div>
-      </div>
-
-      <div class="login-card" *ngIf="passoLogin === 'novaSenha'">
-        <h1>NOVA SENHA</h1>
-        <p class="txt-ajuda">Defina a sua nova senha de acesso.</p>
-
-        <div class="form-container">
-          <ion-item lines="none" class="custom-input">
-            <ion-label position="stacked">Nova Senha</ion-label>
-            <ion-input type="password" [(ngModel)]="novaSenha"></ion-input>
-          </ion-item>
-
-          <ion-item lines="none" class="custom-input">
-            <ion-label position="stacked">Confirmar Nova Senha</ion-label>
-            <ion-input type="password" [(ngModel)]="confirmarNovaSenha"></ion-input>
-          </ion-item>
-        </div>
-
-        <ion-button expand="block" (click)="salvarNovaSenha()" class="btn-entrar">
-          Confirmar
-        </ion-button>
-
-        <div class="links-footer">
-          <p class="link-esqueceu" (click)="passoLogin = 'login'">Cancelar</p>
         </div>
       </div>
 

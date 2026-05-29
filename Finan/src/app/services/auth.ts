@@ -4,8 +4,10 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut,
-  GoogleAuthProvider, // 👈 Adicionado para o Google
-  signInWithPopup     // 👈 Adicionado para abrir a janela de login
+  GoogleAuthProvider, 
+  signInWithPopup,
+  sendPasswordResetEmail,
+  updatePassword // 👈 IMPORTANTE: Adicione esta importação do Firebase
 } from '@angular/fire/auth';
 
 @Injectable({
@@ -16,14 +18,12 @@ export class AuthService {
 
   constructor() {}
 
-  // 👇 Novo método para o Login com o Google
   async loginComGoogle() {
     const provider = new GoogleAuthProvider();
     return await signInWithPopup(this.auth, provider);
   }
 
   async cadastrar(email: string, senha: string) {
-    // O segredo é o await aqui para esperar o Firebase responder
     return await createUserWithEmailAndPassword(this.auth, email, senha);
   }
 
@@ -33,5 +33,19 @@ export class AuthService {
 
   async logout() {
     return await signOut(this.auth);
+  }
+
+  async redefinirSenha(email: string) {
+    return await sendPasswordResetEmail(this.auth, email);
+  }
+
+  // 👇 NOVO MÉTODO: Altera a senha do usuário atualmente autenticado
+  async atualizarSenha(novaSenha: string) {
+    const usuarioAtual = this.auth.currentUser;
+    if (usuarioAtual) {
+      return await updatePassword(usuarioAtual, novaSenha);
+    } else {
+      throw new Error('Nenhum usuário autenticado no Firebase.');
+    }
   }
 }
