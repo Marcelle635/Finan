@@ -18,7 +18,7 @@ export class AuthService {
 
   constructor() {}
 
-  // 👇 Adicionado: Getter que a tela CasaPage usa para ler o usuário logado
+  // Getter que as páginas usam para ler o estado do usuário logado no Firebase
   get obterAuth() {
     return this.auth;
   }
@@ -39,17 +39,17 @@ export class AuthService {
     return await signInWithEmailAndPassword(this.auth, email, senha);
   }
 
-  // Logout do sistema
+  // Logout do sistema (Unificado como 'logout')
   async logout() {
     return await signOut(this.auth);
   }
 
-  // 👇 Adicionado: Método que a tela Login usa para o "Esqueceu a senha?"
+  // Método que a tela de Login usa para o "Esqueceu a senha?"
   async redefinirSenha(email: string) {
     return await sendPasswordResetEmail(this.auth, email);
   }
 
-  // 👇 Adicionado: Método que a tela Alterar Senha usa internamente
+  // Método que a tela Alterar Senha usa internamente
   async atualizarSenha(novaSenha: string) {
     const usuarioAtual = this.auth.currentUser;
     if (usuarioAtual) {

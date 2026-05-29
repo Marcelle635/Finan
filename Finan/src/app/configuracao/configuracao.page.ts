@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router'; 
 import { 
@@ -9,18 +9,19 @@ import {
   IonIcon, 
   IonAvatar, 
   IonList,
-  ActionSheetController // Importado para gerenciar as opções da foto de perfil
+  ActionSheetController 
 } from '@ionic/angular/standalone';
 import { ContasService } from '../services/contas.service';
+import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
 import { 
   settings, 
   notificationsOutline, 
   lockClosedOutline, 
   chevronForwardOutline,
-  trashOutline,     // Ícone adicionado para a opção de remover foto
-  imageOutline,     // Ícone adicionado para a opção de escolher foto
-  closeOutline      // Ícone adicionado para o botão cancelar do menu
+  trashOutline,     
+  imageOutline,     
+  closeOutline      
 } from 'ionicons/icons';
 
 @Component({
@@ -41,15 +42,17 @@ import {
   ]
 })
 export class ConfiguracoesPage implements OnInit {
+  private contasService = inject(ContasService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private actionSheetCtrl = inject(ActionSheetController);
+
   nomeUsuario: string = '';
+  primeiroNome: string = ''; 
   avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
   fotoUsuario: string = this.avatarPadrao;
 
-  constructor(
-    private contasService: ContasService,
-    private router: Router,
-    private actionSheetCtrl: ActionSheetController // Injetando o controlador de menu
-  ) {
+  constructor() {
     addIcons({ 
       settings, 
       notificationsOutline, 
@@ -66,13 +69,28 @@ export class ConfiguracoesPage implements OnInit {
   }
 
   ionViewWillEnter() {
-    this.carregarDadosUsuario(); // Garante a atualização da foto ao entrar na tela
+    this.carregarDadosUsuario(); 
   }
 
   carregarDadosUsuario() {
-    this.nomeUsuario = this.contasService.buscarUsuario();
+    const firebaseUser = this.authService.obterAuth.currentUser;
+    const nomeLocal = this.contasService.buscarUsuario();
     
-    // Configura a foto dinamicamente com base no usuário atual logado
+    // 👇 CORREÇÃO: Mantém a mesma hierarquia segura de nome de usuário das outras abas
+    if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
+    } else if (firebaseUser && firebaseUser.displayName) {
+      this.nomeUsuario = firebaseUser.displayName;
+    } else if (firebaseUser && firebaseUser.email) {
+      this.nomeUsuario = firebaseUser.email.split('@')[0];
+    } else {
+      this.nomeUsuario = 'Usuário';
+    }
+
+    // Isola o primeiro nome para a interface
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+    
+    // Sincroniza a foto de perfil com a chave correta baseada no usuário atual
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
   }
@@ -85,13 +103,16 @@ export class ConfiguracoesPage implements OnInit {
     this.router.navigate(['/alterar-senha']);
   }
 
-  logout() {
-    localStorage.removeItem('usuario_logado'); 
-    console.log('Usuário deslogado com sucesso.');
-    this.router.navigate(['/login']);
+  async logout() {
+    try {
+      await this.authService.logout(); 
+      localStorage.removeItem('usuario_logado'); 
+      this.router.navigate(['/login']);
+    } catch (erro) {
+      console.error('Erro ao efetuar logout:', erro);
+    }
   }
 
-  // Abre as opções para alterar ou deixar sem foto
   async dispararSeletorArquivo() {
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Foto de Perfil',

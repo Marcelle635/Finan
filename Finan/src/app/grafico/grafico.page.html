@@ -1,12 +1,10 @@
 <ion-header class="ion-no-border">
   <div class="header-purple">
     <ion-item lines="none" class="user-info">
-      <!-- Adicionado o evento click para o menu de gerenciamento de foto -->
       <ion-avatar slot="start" (click)="dispararSeletorArquivo()" style="cursor: pointer;">
         <img [src]="fotoUsuario" alt="Foto de perfil" />
       </ion-avatar>
 
-      <!-- Input de arquivo oculto para captura da nova imagem -->
       <input 
         type="file" 
         #seletorArquivoGrafico 
@@ -18,13 +16,14 @@
 
       <ion-label>
         <p class="texto-boas-vindas">Bem vindo(a)</p>
-        <h1>{{ nomeUsuario }}</h1>
+        <h1>{{ primeiroNome }}</h1>
       </ion-label>
       <ion-icon 
         name="settings-outline" 
         slot="end" 
         color="light" 
-        routerLink="/configuracoes">
+        routerLink="/configuracoes"
+        style="cursor: pointer;">
       </ion-icon>
     </ion-item>
     
@@ -43,9 +42,9 @@
 <ion-content>
   <div class="date-selector">
     <div class="date-header">
-      <ion-icon name="chevron-back-outline" (click)="mudarMes(-1)"></ion-icon>
+      <ion-icon name="chevron-back-outline" (click)="mudarMes(-1)" style="cursor: pointer;"></ion-icon>
       <span class="mes-titulo">{{ textoMesAno }}</span>
-      <ion-icon name="chevron-forward-outline" (click)="mudarMes(1)"></ion-icon>
+      <ion-icon name="chevron-forward-outline" (click)="mudarMes(1)" style="cursor: pointer;"></ion-icon>
     </div>
 
     <div class="date-details">

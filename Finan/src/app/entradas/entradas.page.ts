@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -16,9 +16,10 @@ import {
   IonTabBar, 
   IonTabButton,
   IonModal,
-  ActionSheetController // Importado para gerenciar as opções da foto de perfil
+  ActionSheetController 
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
+import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
 import { 
   settings, 
@@ -33,8 +34,8 @@ import {
   trendingUpOutline, 
   heartOutline,
   trashOutline,
-  imageOutline,     // Ícone adicionado para o menu da foto
-  closeOutline      // Ícone adicionado para o menu da foto
+  imageOutline,     
+  closeOutline      
 } from 'ionicons/icons';
 
 @Component({
@@ -62,7 +63,12 @@ import {
   ]
 })
 export class EntradasPage implements OnInit {
+  private contasService = inject(ContasService);
+  private authService = inject(AuthService);
+  private actionSheetCtrl = inject(ActionSheetController);
+
   nomeUsuario: string = '';
+  primeiroNome: string = ''; 
   avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
   fotoUsuario: string = this.avatarPadrao;
   
@@ -84,10 +90,7 @@ export class EntradasPage implements OnInit {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
-  constructor(
-    private contasService: ContasService,
-    private actionSheetCtrl: ActionSheetController // Injetando o controlador de menu
-  ) {
+  constructor() {
     addIcons({ 
       settings,
       settingsOutline, 
@@ -116,9 +119,24 @@ export class EntradasPage implements OnInit {
   }
 
   carregarDados() {
-    this.nomeUsuario = this.contasService.buscarUsuario();
+    const firebaseUser = this.authService.obterAuth.currentUser;
+    const nomeLocal = this.contasService.buscarUsuario();
     
-    // Configura a foto dinamicamente com base no usuário atual logado
+    // 👇 AJUSTADO: Prioriza o nome limpo do localStorage ou o displayName do Google
+    if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
+    } else if (firebaseUser && firebaseUser.displayName) {
+      this.nomeUsuario = firebaseUser.displayName;
+    } else if (firebaseUser && firebaseUser.email) {
+      this.nomeUsuario = firebaseUser.email.split('@')[0];
+    } else {
+      this.nomeUsuario = 'Usuário';
+    }
+
+    // Isola e formata apenas o primeiro nome para a interface
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+    
+    // Sincroniza a chave da foto com base no ID textual completo do usuário
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
@@ -167,17 +185,14 @@ export class EntradasPage implements OnInit {
   }
 
   calcularTotalEntradas() {
-    // 1. Calcula a soma de todas as entradas do usuário logado
     const somaEntradas = this.entradasFiltradas.reduce((acc, entrada) => acc + entrada.valor, 0);
 
-    // 2. Busca e calcula os gastos desse usuário que possuem status igual a 'pago'
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
       conta.usuario === this.nomeUsuario && conta.status === 'pago'
     );
     const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
 
-    // 3. O Saldo Geral desconta o que já foi pago
     this.totalEntradas = somaEntradas - somaGastosPagos;
   }
 
@@ -212,7 +227,6 @@ export class EntradasPage implements OnInit {
     this.carregarEntradasDoUsuario();
   }
 
-  // Abre as opções para alterar ou deixar sem foto
   async dispararSeletorArquivo() {
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Foto de Perfil',

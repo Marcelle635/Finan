@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { 
@@ -11,9 +11,10 @@ import {
   IonFooter, 
   IonTabBar, 
   IonTabButton,
-  ActionSheetController // Importado para gerenciar as opções da foto de perfil
+  ActionSheetController 
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
+import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
 import { 
   settings, 
@@ -26,9 +27,9 @@ import {
   homeOutline, 
   trendingUp, 
   heartOutline,
-  trashOutline,     // Ícone adicionado para a opção de remover foto
-  imageOutline,     // Ícone adicionado para a opção de escolher foto
-  closeOutline      // Ícone adicionado para o botão cancelar do menu
+  trashOutline,     
+  imageOutline,     
+  closeOutline      
 } from 'ionicons/icons';
 
 @Component({
@@ -51,7 +52,12 @@ import {
   ]
 })
 export class GraficoPage implements OnInit {
+  private contasService = inject(ContasService);
+  private authService = inject(AuthService);
+  private actionSheetCtrl = inject(ActionSheetController);
+
   nomeUsuario: string = '';
+  primeiroNome: string = ''; 
   avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
   fotoUsuario: string = this.avatarPadrao;
 
@@ -66,10 +72,7 @@ export class GraficoPage implements OnInit {
 
   dadosMeses: any[] = [];
 
-  constructor(
-    private contasService: ContasService,
-    private actionSheetCtrl: ActionSheetController // Injetando o controlador de menu
-  ) {
+  constructor() {
     addIcons({ 
       settings,
       settingsOutline, 
@@ -98,23 +101,32 @@ export class GraficoPage implements OnInit {
   }
 
   carregarDados() {
-    this.nomeUsuario = this.contasService.buscarUsuario();
+    const firebaseUser = this.authService.obterAuth.currentUser;
+    const nomeLocal = this.contasService.buscarUsuario();
     
-    // Configura a foto dinamicamente com base no usuário atual logado
+    // 👇 CORREÇÃO: Alinha as prioridades com as páginas Casa e Entradas
+    if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
+    } else if (firebaseUser && firebaseUser.displayName) {
+      this.nomeUsuario = firebaseUser.displayName;
+    } else if (firebaseUser && firebaseUser.email) {
+      this.nomeUsuario = firebaseUser.email.split('@')[0];
+    } else {
+      this.nomeUsuario = 'Usuário';
+    }
+
+    // Isola e formata o primeiro nome para a interface
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+    
+    // Configura a chave da foto unificada baseado no nome do usuário ativo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
-    // Sincroniza dados antigos para garantir que o gráfico não comece zerado
     this.sincronizarContasAntigas();
-    
     this.calcularTotalEntradasDoUsuario();
     this.calcularGastosPorMes(); 
   }
 
-  /**
-   * FUNÇÃO DE SEGURANÇA: Se o histórico estiver vazio, ela copia os gastos existentes 
-   * da página inicial para que o gráfico apareça preenchido imediatamente.
-   */
   sincronizarContasAntigas() {
     const historicoDefinitivo = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
     
@@ -159,26 +171,23 @@ export class GraficoPage implements OnInit {
     ];
     
     const cores = ['#E9C7FF', '#CE8BFF', '#B550FF', '#9E24FF'];
-
     const historicoDefinitivo = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
     const anoSelecionado = this.dataAncorada.getFullYear();
-
     const resultadoAgrupado = [];
 
     for (let i = 0; i < 12; i++) {
-      const contasDoMes = historicoDefinitivo.filter((conta: any) => {
+      const accountsDoMes = historicoDefinitivo.filter((conta: any) => {
         if (conta.usuario !== this.nomeUsuario) return false;
         if (!conta.vencimento) return false;
         
-        const partes = conta.vencimento.split('-'); // ["2026", "05", "28"]
+        const partes = conta.vencimento.split('-'); 
         const anoConta = parseInt(partes[0], 10);
         const mesConta = parseInt(partes[1], 10);
         
-        const mesmoAnoEMes = anoConta === anoSelecionado && mesConta === (i + 1);
-        return mesmoAnoEMes;
+        return anoConta === anoSelecionado && mesConta === (i + 1);
       });
 
-      const totalGastoNoMes = contasDoMes.reduce((soma: number, conta: any) => soma + conta.valor, 0);
+      const totalGastoNoMes = accountsDoMes.reduce((soma: number, conta: any) => soma + conta.valor, 0);
 
       resultadoAgrupado.push({
         mes: nomesMeses[i],
@@ -191,19 +200,16 @@ export class GraficoPage implements OnInit {
   }
 
   calcularTotalEntradasDoUsuario() {
-    // 1. Calcula a soma de todas as entradas do usuário logado
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
     const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
 
-    // 2. Busca e calcula os gastos desse usuário que possuem status igual a 'pago'
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
       conta.usuario === this.nomeUsuario && conta.status === 'pago'
     );
     const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
 
-    // 3. Aplica a dedução de gastos pagos ao Saldo Geral
     this.totalEntradas = somaEntradas - somaGastosPagos;
   }
 
@@ -221,7 +227,6 @@ export class GraficoPage implements OnInit {
     return (gasto / maiorGasto) * alturaMaximaPx;
   }
 
-  // Abre as opções para alterar ou deixar sem foto
   async dispararSeletorArquivo() {
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Foto de Perfil',

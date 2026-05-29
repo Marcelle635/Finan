@@ -20,7 +20,7 @@ import {
   ActionSheetController 
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
-import { AuthService } from '../services/auth'; // 👈 Injetado para identificar a conta logada do Firebase
+import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
 import { 
   settings, 
@@ -65,12 +65,12 @@ import { inject } from '@angular/core';
   ]
 })
 export class CasaPage implements OnInit {
-  // Injeções de dependência modernas usando inject
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
 
   nomeUsuario: string = '';
+  primeiroNome: string = '';
   avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
   fotoUsuario: string = this.avatarPadrao;
   
@@ -119,7 +119,6 @@ export class CasaPage implements OnInit {
     this.carregarDados();
   }
 
-  // ESSENCIAL: Disparado toda vez que o usuário navega de volta para a Home
   ionViewWillEnter() {
     this.carregarDados();
   }
@@ -149,28 +148,28 @@ export class CasaPage implements OnInit {
     this.carregarDados(); 
   }
 
-// Adicione essa variável logo no topo da sua classe (junto com as outras propriedades), se ainda não tiver:
-  primeiroNome: string = '';
-
   carregarDados() {
-    // 1. Busca o usuário ativo direto do Firebase para garantir a troca de conta
     const firebaseUser = this.authService.obterAuth.currentUser;
+    const nomeLocal = this.contasService.buscarUsuario();
     
-    if (firebaseUser) {
-      this.nomeUsuario = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || this.contasService.buscarUsuario();
+    // CORREÇÃO: Dá prioridade ao nome local salvo ou ao displayName do Google. Se nenhum existir, usa o prefixo do e-mail.
+    if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
+    } else if (firebaseUser && firebaseUser.displayName) {
+      this.nomeUsuario = firebaseUser.displayName;
+    } else if (firebaseUser && firebaseUser.email) {
+      this.nomeUsuario = firebaseUser.email.split('@')[0];
     } else {
-      this.nomeUsuario = this.contasService.buscarUsuario() || 'Usuário';
+      this.nomeUsuario = 'Usuário';
     }
 
-    // 👇 O SEGREDO AQUI: Guardamos o primeiro nome apenas para exibir na tela!
-    // A variável 'this.nomeUsuario' continua intacta com o nome completo para não quebrar os filtros.
+    // Isola o primeiro nome limpando espaços extras
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
 
-    // 2. Sincroniza a foto de perfil baseado na chave dinâmica do usuário completo
+    // CORREÇÃO EFETUADA: Caractere oculto '夹' removido completamente desta linha
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
 
-    // 3. Carrega o Saldo e Extrato específicos desse usuário
     this.carregarSaldoDasEntradas();
 
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
