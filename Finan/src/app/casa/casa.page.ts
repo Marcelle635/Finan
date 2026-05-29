@@ -161,9 +161,20 @@ export class CasaPage implements OnInit {
   }
 
   carregarSaldoDasEntradas() {
+    // 1. Busca e calcula todas as entradas do usuário
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
-    this.totalEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+    const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+
+    // 2. Busca e calcula todos os gastos que já foram marcados como 'pago' por esse usuário
+    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
+      conta.usuario === this.nomeUsuario && conta.status === 'pago'
+    );
+    const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
+
+    // 3. O Saldo Geral passa a ser: Entradas MINUS (-) Gastos Pagos
+    this.totalEntradas = somaEntradas - somaGastosPagos;
   }
 
   alternarVisibilidadeSaldo() {
