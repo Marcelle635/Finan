@@ -1,9 +1,20 @@
 <ion-header class="ion-no-border">
   <div class="header-purple">
     <ion-item lines="none" class="user-info">
-      <ion-avatar slot="start">
+      <!-- Adicionado o evento click para o menu de gerenciamento de foto -->
+      <ion-avatar slot="start" (click)="dispararSeletorArquivo()" style="cursor: pointer;">
         <img [src]="fotoUsuario" alt="Foto de perfil" />
       </ion-avatar>
+
+      <!-- Input de arquivo oculto para captura da nova imagem -->
+      <input 
+        type="file" 
+        #seletorArquivoGrafico 
+        id="seletorArquivoGrafico" 
+        accept="image/*" 
+        style="display: none;" 
+        (change)="aoSelecionarFoto($event)" 
+      />
 
       <ion-label>
         <p class="texto-boas-vindas">Bem vindo(a)</p>

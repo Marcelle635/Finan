@@ -10,7 +10,8 @@ import {
   IonAvatar, 
   IonFooter, 
   IonTabBar, 
-  IonTabButton 
+  IonTabButton,
+  ActionSheetController // Importado para gerenciar as opções da foto de perfil
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
@@ -24,7 +25,10 @@ import {
   walletOutline, 
   homeOutline, 
   trendingUp, 
-  heartOutline
+  heartOutline,
+  trashOutline,     // Ícone adicionado para a opção de remover foto
+  imageOutline,     // Ícone adicionado para a opção de escolher foto
+  closeOutline      // Ícone adicionado para o botão cancelar do menu
 } from 'ionicons/icons';
 
 @Component({
@@ -48,7 +52,8 @@ import {
 })
 export class GraficoPage implements OnInit {
   nomeUsuario: string = '';
-  fotoUsuario: string = '';
+  avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  fotoUsuario: string = this.avatarPadrao;
 
   totalEntradas: number = 0;
   exibirSaldo: boolean = false;
@@ -61,7 +66,10 @@ export class GraficoPage implements OnInit {
 
   dadosMeses: any[] = [];
 
-  constructor(private contasService: ContasService) {
+  constructor(
+    private contasService: ContasService,
+    private actionSheetCtrl: ActionSheetController // Injetando o controlador de menu
+  ) {
     addIcons({ 
       settings,
       settingsOutline, 
@@ -72,7 +80,10 @@ export class GraficoPage implements OnInit {
       walletOutline, 
       homeOutline, 
       trendingUp, 
-      heartOutline
+      heartOutline,
+      trashOutline,
+      imageOutline,
+      closeOutline
     });
   }
 
@@ -88,7 +99,10 @@ export class GraficoPage implements OnInit {
 
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
-    this.fotoUsuario = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    
+    // Configura a foto dinamicamente com base no usuário atual logado
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
     // Sincroniza dados antigos para garantir que o gráfico não comece zerado
     this.sincronizarContasAntigas();
@@ -156,7 +170,6 @@ export class GraficoPage implements OnInit {
         if (conta.usuario !== this.nomeUsuario) return false;
         if (!conta.vencimento) return false;
         
-        // Tratamento robusto de string para evitar erros de fuso horário (Timezone)
         const partes = conta.vencimento.split('-'); // ["2026", "05", "28"]
         const anoConta = parseInt(partes[0], 10);
         const mesConta = parseInt(partes[1], 10);
@@ -178,9 +191,20 @@ export class GraficoPage implements OnInit {
   }
 
   calcularTotalEntradasDoUsuario() {
+    // 1. Calcula a soma de todas as entradas do usuário logado
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
-    this.totalEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+    const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+
+    // 2. Busca e calcula os gastos desse usuário que possuem status igual a 'pago'
+    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
+      conta.usuario === this.nomeUsuario && conta.status === 'pago'
+    );
+    const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
+
+    // 3. Aplica a dedução de gastos pagos ao Saldo Geral
+    this.totalEntradas = somaEntradas - somaGastosPagos;
   }
 
   alternarVisibilidadeSaldo() {
@@ -195,5 +219,58 @@ export class GraficoPage implements OnInit {
     
     const alturaMaximaPx = 140; 
     return (gasto / maiorGasto) * alturaMaximaPx;
+  }
+
+  // Abre as opções para alterar ou deixar sem foto
+  async dispararSeletorArquivo() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Foto de Perfil',
+      buttons: [
+        {
+          text: 'Escolher Nova Foto',
+          icon: 'image-outline',
+          handler: () => {
+            const elementoInput = document.getElementById('seletorArquivoGrafico') as HTMLInputElement;
+            if (elementoInput) {
+              elementoInput.click();
+            }
+          }
+        },
+        {
+          text: 'Deixar Sem Foto',
+          role: 'destructive',
+          icon: 'trash-outline',
+          handler: () => {
+            this.removerFoto();
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close-outline'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  aoSelecionarFoto(event: any) {
+    const arquivo = event.target.files[0];
+    if (arquivo) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.fotoUsuario = e.target.result;
+        
+        const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+        localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
+      };
+      reader.readAsDataURL(arquivo);
+    }
+  }
+
+  removerFoto() {
+    this.fotoUsuario = this.avatarPadrao;
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    localStorage.removeItem(chaveFotoUsuario);
   }
 }

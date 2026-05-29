@@ -1,9 +1,18 @@
 <ion-header class="ion-no-border">
   <div class="header-purple">
     <ion-item lines="none" class="user-info">
-      <ion-avatar slot="start">
+      <ion-avatar slot="start" (click)="dispararSeletorArquivo()" style="cursor: pointer;">
         <img [src]="fotoUsuario" alt="Foto de perfil" />
       </ion-avatar>
+
+      <input 
+        type="file" 
+        #seletorArquivoEntradas 
+        id="seletorArquivoEntradas" 
+        accept="image/*" 
+        style="display: none;" 
+        (change)="aoSelecionarFoto($event)" 
+      />
 
       <ion-label>
         <p class="texto-boas-vindas">Bem vindo(a)</p>
@@ -19,7 +28,7 @@
     
     <div class="saldo-container">
       <p>Saldo geral</p>
-      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()">
+      <div class="saldo-row" (click)="alternarVisibilidadeSaldo()" style="cursor: pointer;">
         <span *ngIf="!exibirSaldo">********</span>
         <span *ngIf="exibirSaldo" class="valor-saldo-geral">{{ totalEntradas | currency:'BRL' }}</span>
         

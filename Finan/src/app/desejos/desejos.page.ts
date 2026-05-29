@@ -13,7 +13,8 @@ import {
   IonFooter, 
   IonTabBar, 
   IonTabButton,
-  IonModal 
+  IonModal,
+  ActionSheetController // Importado para gerenciar as opções da foto de perfil
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
@@ -33,7 +34,9 @@ import {
   trashOutline,
   checkmarkCircleOutline,
   cartOutline,
-  giftOutline
+  giftOutline,
+  imageOutline,     // Ícone adicionado para a opção de escolher foto
+  closeOutline      // Ícone adicionado para o botão cancelar do menu
 } from 'ionicons/icons';
 
 @Component({
@@ -60,7 +63,8 @@ import {
 })
 export class DesejosPage implements OnInit {
   nomeUsuario: string = '';
-  fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  fotoUsuario: string = this.avatarPadrao;
   
   totalEntradas: number = 0;
   exibirSaldo: boolean = false;
@@ -69,7 +73,6 @@ export class DesejosPage implements OnInit {
   totalConquistado: number = 0;
   isModalAberto: boolean = false;
 
-  // MODIFICADO: Começa como um array vazio para não trazer valores estáticos/mockados de teste
   desejosFiltrados: any[] = [];
 
   novoDesejo = {
@@ -83,7 +86,10 @@ export class DesejosPage implements OnInit {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
-  constructor(private contasService: ContasService) {
+  constructor(
+    private contasService: ContasService,
+    private actionSheetCtrl: ActionSheetController // Injetando o controlador de menu
+  ) {
     addIcons({ 
       settings,
       settingsOutline, 
@@ -100,7 +106,9 @@ export class DesejosPage implements OnInit {
       trashOutline,
       checkmarkCircleOutline,
       cartOutline,
-      giftOutline
+      giftOutline,
+      imageOutline,
+      closeOutline
     });
   }
 
@@ -115,16 +123,30 @@ export class DesejosPage implements OnInit {
 
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
-    this.fotoUsuario = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    
+    // Configura a foto dinamicamente com base no usuário atual logado
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
     this.calcularTotalEntradasDoUsuario();
-    this.carregarDesejosDoUsuario(); // MODIFICADO: Carrega os desejos salvos reais do usuário
+    this.carregarDesejosDoUsuario(); 
   }
 
   calcularTotalEntradasDoUsuario() {
+    // 1. Calcula a soma de todas as entradas do usuário logado
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
-    this.totalEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+    const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+
+    // 2. Busca e calcula os gastos desse usuário que possuem status igual a 'pago'
+    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
+      conta.usuario === this.nomeUsuario && conta.status === 'pago'
+    );
+    const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
+
+    // 3. Aplica a dedução de gastos pagos ao Saldo Geral
+    this.totalEntradas = somaEntradas - somaGastosPagos;
   }
 
   alternarVisibilidadeSaldo() {
@@ -162,41 +184,24 @@ export class DesejosPage implements OnInit {
     }
   }
 
-  /**
-   * NOVAS FUNÇÕES PARA SALVAR E FILTRAR DE ACORDO COM A CONTA DE CADA USUÁRIO
-   */
-
   carregarDesejosDoUsuario() {
-    // Busca a lista mestre global de desejos no dispositivo
     const todosDesejosGeral = JSON.parse(localStorage.getItem('app_todas_contas_desejos') || '[]');
-    
-    // Filtra para exibir apenas os desejos pertencentes à conta do usuário atual
     this.desejosFiltrados = todosDesejosGeral.filter((desejo: any) => desejo.usuario === this.nomeUsuario);
-    
     this.calcularTotais();
   }
 
   salvarDesejosNoStorage(listaLocalAtualizada: any[]) {
-    // Carrega tudo o que existe hoje no dispositivo
     const todosDesejosGeral = JSON.parse(localStorage.getItem('app_todas_contas_desejos') || '[]');
-    
-    // Remove os registros antigos desse usuário específico para não duplicar
     const outrosUsuarios = todosDesejosGeral.filter((desejo: any) => desejo.usuario !== this.nomeUsuario);
-    
-    // Junta os desejos atualizados do usuário com os desejos dos outros usuários logados no mesmo celular
     const bancoAtualizado = [...outrosUsuarios, ...listaLocalAtualizada];
-    
-    // Salva de volta no banco de dados local
     localStorage.setItem('app_todas_contas_desejos', JSON.stringify(bancoAtualizado));
   }
 
   calcularTotais() {
-    // MODIFICADO: Total desejado = Soma apenas dos itens que NÃO foram conquistados/comprados ainda
     this.totalDesejado = this.desejosFiltrados
       .filter(item => !item.conquistado)
       .reduce((acc, item) => acc + item.valor, 0);
     
-    // Total conquistado = Soma apenas dos itens marcados como true (Conquistado)
     this.totalConquistado = this.desejosFiltrados
       .filter(item => item.conquistado)
       .reduce((acc, item) => acc + item.valor, 0);
@@ -208,10 +213,9 @@ export class DesejosPage implements OnInit {
       return;
     }
 
-    // Cria o objeto contendo o vínculo do usuário logado dono da conta
     const novoItem = {
       id: Date.now(),
-      usuario: this.nomeUsuario, // Vínculo com a conta
+      usuario: this.nomeUsuario, 
       titulo: this.novoDesejo.titulo,
       valor: Number(this.novoDesejo.valor),
       conquistado: false
@@ -236,5 +240,58 @@ export class DesejosPage implements OnInit {
     
     this.salvarDesejosNoStorage(this.desejosFiltrados);
     this.calcularTotais();
+  }
+
+  // Abre as opções para alterar ou deixar sem foto
+  async dispararSeletorArquivo() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Foto de Perfil',
+      buttons: [
+        {
+          text: 'Escolher Nova Foto',
+          icon: 'image-outline',
+          handler: () => {
+            const elementoInput = document.getElementById('seletorArquivoDesejos') as HTMLInputElement;
+            if (elementoInput) {
+              elementoInput.click();
+            }
+          }
+        },
+        {
+          text: 'Deixar Sem Foto',
+          role: 'destructive',
+          icon: 'trash-outline',
+          handler: () => {
+            this.removerFoto();
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close-outline'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  aoSelecionarFoto(event: any) {
+    const arquivo = event.target.files[0];
+    if (arquivo) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.fotoUsuario = e.target.result;
+        
+        const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+        localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
+      };
+      reader.readAsDataURL(arquivo);
+    }
+  }
+
+  removerFoto() {
+    this.fotoUsuario = this.avatarPadrao;
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    localStorage.removeItem(chaveFotoUsuario);
   }
 }

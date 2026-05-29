@@ -16,7 +16,8 @@ import {
   IonFooter, 
   IonTabBar, 
   IonTabButton,
-  IonModal 
+  IonModal,
+  ActionSheetController // Importado para criar o menu de opções
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
@@ -31,7 +32,10 @@ import {
   walletOutline, 
   homeOutline, 
   trendingUpOutline, 
-  heartOutline 
+  heartOutline,
+  imageOutline,     // Ícone para o menu
+  trashOutline,     // Ícone para o menu
+  closeOutline      // Ícone para o menu
 } from 'ionicons/icons';
 
 @Component({
@@ -60,7 +64,8 @@ import {
 })
 export class CasaPage implements OnInit {
   nomeUsuario: string = '';
-  fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  fotoUsuario: string = this.avatarPadrao;
   
   contas: any[] = []; 
   contasFiltradas: any[] = [];
@@ -83,7 +88,11 @@ export class CasaPage implements OnInit {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
-  constructor(private contasService: ContasService) {
+  // Injetando o ActionSheetController no construtor
+  constructor(
+    private contasService: ContasService,
+    private actionSheetCtrl: ActionSheetController
+  ) {
     addIcons({ 
       settings,
       settingsOutline, 
@@ -95,7 +104,10 @@ export class CasaPage implements OnInit {
       walletOutline, 
       homeOutline, 
       trendingUpOutline, 
-      heartOutline 
+      heartOutline,
+      imageOutline,
+      trashOutline,
+      closeOutline
     });
   }
 
@@ -137,9 +149,11 @@ export class CasaPage implements OnInit {
     this.nomeUsuario = this.contasService.buscarUsuario();
     this.carregarSaldoDasEntradas();
 
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
+
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     
-    // Filtra por usuário e restringe ao mês selecionado na tela inicial
     this.contas = todasContasGeral.filter((conta: any) => {
       const mesmoUsuario = conta.usuario === this.nomeUsuario;
       return mesmoUsuario && this.isContaNoMesSelecionado(conta.vencimento);
@@ -161,19 +175,16 @@ export class CasaPage implements OnInit {
   }
 
   carregarSaldoDasEntradas() {
-    // 1. Busca e calcula todas as entradas do usuário
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
     const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
 
-    // 2. Busca e calcula todos os gastos que já foram marcados como 'pago' por esse usuário
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
       conta.usuario === this.nomeUsuario && conta.status === 'pago'
     );
     const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
 
-    // 3. O Saldo Geral passa a ser: Entradas MINUS (-) Gastos Pagos
     this.totalEntradas = somaEntradas - somaGastosPagos;
   }
 
@@ -234,7 +245,6 @@ export class CasaPage implements OnInit {
     todasContasGeral.push(nova);
     localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
     
-    // Salva de forma permanente no histórico que alimenta o gráfico
     this.salvarNoHistoricoDefinitivo(nova);
 
     const [anoGasto, mesGasto] = this.novaConta.vencimento.split('-');
@@ -252,17 +262,11 @@ export class CasaPage implements OnInit {
     if (index !== -1) {
       todasContasGeral[index].status = 'pago';
       localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
-      
-      // Atualiza o status também na tabela do histórico permanente
       this.salvarNoHistoricoDefinitivo(todasContasGeral[index]);
-
       this.carregarDados();
     }
   }
 
-  /**
-   * Banco de dados local permanente para o Gráfico
-   */
   salvarNoHistoricoDefinitivo(conta: any) {
     const historicoGeral = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
     const index = historicoGeral.findIndex((h: any) => h.id === conta.id);
@@ -277,7 +281,6 @@ export class CasaPage implements OnInit {
   }
 
   excluirConta(id: number) {
-    // Remove apenas do array da tela inicial (Home)
     let todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     todasContasGeral = todasContasGeral.filter((c: any) => c.id !== id);
     
@@ -285,11 +288,37 @@ export class CasaPage implements OnInit {
     this.carregarDados();
   }
 
-  dispararSeletorArquivo() {
-    const elementoInput = document.getElementById('seletorArquivo') as HTMLInputElement;
-    if (elementoInput) {
-      elementoInput.click();
-    }
+  // Abre o menu perguntando se o usuário quer alterar ou remover a imagem
+  async dispararSeletorArquivo() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Foto de Perfil',
+      buttons: [
+        {
+          text: 'Escolher Nova Foto',
+          icon: 'image-outline',
+          handler: () => {
+            const elementoInput = document.getElementById('seletorArquivo') as HTMLInputElement;
+            if (elementoInput) {
+              elementoInput.click();
+            }
+          }
+        },
+        {
+          text: 'Deixar Sem Foto',
+          role: 'destructive',
+          icon: 'trash-outline',
+          handler: () => {
+            this.removerFoto();
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close-outline'
+        }
+      ]
+    });
+    await actionSheet.present();
   }
 
   aoSelecionarFoto(event: any) {
@@ -298,9 +327,17 @@ export class CasaPage implements OnInit {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        localStorage.setItem('foto_usuario', this.fotoUsuario);
+        
+        const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+        localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
       };
       reader.readAsDataURL(arquivo);
     }
+  }
+
+  removerFoto() {
+    this.fotoUsuario = this.avatarPadrao;
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    localStorage.removeItem(chaveFotoUsuario);
   }
 }

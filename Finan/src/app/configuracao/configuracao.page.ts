@@ -8,7 +8,8 @@ import {
   IonLabel, 
   IonIcon, 
   IonAvatar, 
-  IonList 
+  IonList,
+  ActionSheetController // Importado para gerenciar as opções da foto de perfil
 } from '@ionic/angular/standalone';
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
@@ -16,7 +17,10 @@ import {
   settings, 
   notificationsOutline, 
   lockClosedOutline, 
-  chevronForwardOutline 
+  chevronForwardOutline,
+  trashOutline,     // Ícone adicionado para a opção de remover foto
+  imageOutline,     // Ícone adicionado para a opção de escolher foto
+  closeOutline      // Ícone adicionado para o botão cancelar do menu
 } from 'ionicons/icons';
 
 @Component({
@@ -38,22 +42,39 @@ import {
 })
 export class ConfiguracoesPage implements OnInit {
   nomeUsuario: string = '';
-  fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  fotoUsuario: string = this.avatarPadrao;
 
   constructor(
     private contasService: ContasService,
-    private router: Router 
+    private router: Router,
+    private actionSheetCtrl: ActionSheetController // Injetando o controlador de menu
   ) {
     addIcons({ 
       settings, 
       notificationsOutline, 
       lockClosedOutline, 
-      chevronForwardOutline 
+      chevronForwardOutline,
+      trashOutline,
+      imageOutline,
+      closeOutline
     });
   }
 
   ngOnInit() {
+    this.carregarDadosUsuario();
+  }
+
+  ionViewWillEnter() {
+    this.carregarDadosUsuario(); // Garante a atualização da foto ao entrar na tela
+  }
+
+  carregarDadosUsuario() {
     this.nomeUsuario = this.contasService.buscarUsuario();
+    
+    // Configura a foto dinamicamente com base no usuário atual logado
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
   }
 
   irParaNotificacoes() {
@@ -61,7 +82,6 @@ export class ConfiguracoesPage implements OnInit {
   }
 
   irParaAlterarSenha() {
-    // MODIFICADO: Descomentado e configurado para navegar para a tela de alterar-senha
     this.router.navigate(['/alterar-senha']);
   }
 
@@ -69,5 +89,58 @@ export class ConfiguracoesPage implements OnInit {
     localStorage.removeItem('usuario_logado'); 
     console.log('Usuário deslogado com sucesso.');
     this.router.navigate(['/login']);
+  }
+
+  // Abre as opções para alterar ou deixar sem foto
+  async dispararSeletorArquivo() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Foto de Perfil',
+      buttons: [
+        {
+          text: 'Escolher Nova Foto',
+          icon: 'image-outline',
+          handler: () => {
+            const elementoInput = document.getElementById('seletorArquivoConfig') as HTMLInputElement;
+            if (elementoInput) {
+              elementoInput.click();
+            }
+          }
+        },
+        {
+          text: 'Deixar Sem Foto',
+          role: 'destructive',
+          icon: 'trash-outline',
+          handler: () => {
+            this.removerFoto();
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close-outline'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  aoSelecionarFoto(event: any) {
+    const arquivo = event.target.files[0];
+    if (arquivo) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.fotoUsuario = e.target.result;
+        
+        const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+        localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
+      };
+      reader.readAsDataURL(arquivo);
+    }
+  }
+
+  removerFoto() {
+    this.fotoUsuario = this.avatarPadrao;
+    const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
+    localStorage.removeItem(chaveFotoUsuario);
   }
 }
