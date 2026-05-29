@@ -37,7 +37,6 @@ import {
   imageOutline,     
   closeOutline      
 } from 'ionicons/icons';
-import { Subscription } from 'rxjs'; // Adicionado para manter a consistência
 
 @Component({
   selector: 'app-entradas',
@@ -113,7 +112,7 @@ export class EntradasPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.inicializarSeletorData();
     
-    // MONITORAMENTO EM TEMPO REAL: Atualiza os dados se a conta logada mudar
+    // MONITORAMENTO EM TEMPO REAL: Garante atualização imediata se trocar de conta
     if (this.authService.obterAuth) {
       this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
         this.carregarDados(firebaseUser);
@@ -129,13 +128,13 @@ export class EntradasPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Implementado hook de destruição por segurança estrutural do ciclo
+    // Hooks de encerramento limpos
   }
 
   carregarDados(firebaseUser: any | null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // Prioridade de identificação da conta ativa atual
+    // Identificação prioritária baseada na sessão atual do Firebase
     if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (nomeLocal && !nomeLocal.includes('@')) {
@@ -146,10 +145,10 @@ export class EntradasPage implements OnInit, OnDestroy {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola e formata estritamente o primeiro nome limpo
+    // Isola o primeiro nome da string de forma idêntica à Home
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
     
-    // Sincroniza a chave da foto do perfil associada a este usuário específico
+    // Vincula a foto específica deste usuário logado
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
@@ -184,6 +183,7 @@ export class EntradasPage implements OnInit, OnDestroy {
   mudarMes(direcao: number) {
     this.dataAncorada.setMonth(this.dataAncorada.getMonth() + direcao);
     this.inicializarSeletorData();
+    // Opcional: Se quiser filtrar as entradas por mês no futuro, adicione a chamada de recarga aqui.
   }
 
   abrirModal(abrir: boolean) {

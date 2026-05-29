@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core'; 
+import { Component, OnInit, OnDestroy, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router'; 
 import { 
@@ -41,7 +41,7 @@ import {
     IonList
   ]
 })
-export class ConfiguracoesPage implements OnInit {
+export class ConfiguracoesPage implements OnInit, OnDestroy {
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -65,32 +65,43 @@ export class ConfiguracoesPage implements OnInit {
   }
 
   ngOnInit() {
-    this.carregarDadosUsuario();
+    // MONITORAMENTO EM TEMPO REAL: Garante consistência de dados do usuário ativo
+    if (this.authService.obterAuth) {
+      this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
+        this.carregarDadosUsuario(firebaseUser);
+      });
+    } else {
+      this.carregarDadosUsuario(null);
+    }
   }
 
   ionViewWillEnter() {
-    this.carregarDadosUsuario(); 
+    const firebaseUser = this.authService.obterAuth?.currentUser;
+    this.carregarDadosUsuario(firebaseUser); 
   }
 
-  carregarDadosUsuario() {
-    const usuarioLogadoApp = localStorage.getItem('usuario_logado');
-    const nomeLocalService = this.contasService.buscarUsuario();
-    const firebaseUser = this.authService.obterAuth.currentUser;
+  ngOnDestroy() {
+    // Hooks de encerramento de ciclo tratados de forma limpa
+  }
+
+  carregarDadosUsuario(firebaseUser: any | null = null) {
+    const nomeLocal = this.contasService.buscarUsuario();
     
-    if (usuarioLogadoApp && !usuarioLogadoApp.includes('@')) {
-      this.nomeUsuario = usuarioLogadoApp;
-    } else if (nomeLocalService && !nomeLocalService.includes('@')) {
-      this.nomeUsuario = nomeLocalService;
-    } else if (firebaseUser && firebaseUser.displayName) {
+    // Identificação prioritária padronizada com o restante do ecossistema do app
+    if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
+    } else if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
     } else if (firebaseUser && firebaseUser.email) {
       this.nomeUsuario = firebaseUser.email.split('@')[0];
     } else {
       this.nomeUsuario = 'Usuário';
     }
 
-    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+    // Isola e formata o primeiro nome para a View
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
     
+    // Sincroniza a chave da foto vinculada estritamente ao usuário ativo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
   }
@@ -106,7 +117,11 @@ export class ConfiguracoesPage implements OnInit {
   async logout() {
     try {
       await this.authService.logout(); 
+      
+      // Limpeza higiênica de chaves legadas de sessão antiga
       localStorage.removeItem('usuario_logado'); 
+      
+      // Redireciona o usuário de volta à estaca zero de autenticação
       this.router.navigate(['/login']);
     } catch (erro) {
       console.error('Erro ao efetuar logout:', erro);

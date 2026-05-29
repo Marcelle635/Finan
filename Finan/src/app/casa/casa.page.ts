@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'; // Adicionado OnDestroy
+import { Component, OnInit, OnDestroy, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -38,8 +38,6 @@ import {
   trashOutline,     
   closeOutline      
 } from 'ionicons/icons';
-import { inject } from '@angular/core';
-import { Subscription } from 'rxjs'; // Adicionado para gerenciar o listener
 
 @Component({
   selector: 'app-casa',
@@ -69,7 +67,6 @@ export class CasaPage implements OnInit, OnDestroy {
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
-  private authSubscription!: Subscription;
 
   nomeUsuario: string = '';
   primeiroNome: string = '';
@@ -119,7 +116,7 @@ export class CasaPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.inicializarSeletorData();
 
-    // MONITORAMENTO EM TEMPO REAL: Se o Firebase mudar de conta, reatualiza instantaneamente
+    // MONITORAMENTO EM TEMPO REAL: Garante atualização imediata do nome se trocar de conta
     if (this.authService.obterAuth) {
       this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
         this.carregarDados(firebaseUser);
@@ -135,10 +132,7 @@ export class CasaPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Evita vazamento de memória se houver subscriptions pendentes
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
+    // Hooks de encerramento de ciclo limpos
   }
 
   inicializarSeletorData() {
@@ -170,7 +164,7 @@ export class CasaPage implements OnInit, OnDestroy {
   carregarDados(firebaseUser: any | null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // Identifica quem está logado no momento
+    // Identificação prioritária e hierárquica do usuário logado
     if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (nomeLocal && !nomeLocal.includes('@')) {
@@ -181,16 +175,16 @@ export class CasaPage implements OnInit, OnDestroy {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Garante que o primeiro nome seja isolado sem quebras
+    // Isola o primeiro nome limpando possíveis espaços duplicados
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
 
-    // Busca a foto específica vinculada à conta atual
+    // Sincroniza a foto de perfil usando o ID nominal exclusivo da conta ativa
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
 
-    // Recarrega as contas e financeiros baseados no novo nome detectado
     this.carregarSaldoDasEntradas();
 
+    // Filtra gastos da conta atual pertinentes apenas ao mês selecionado
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     this.contas = todasContasGeral.filter((conta: any) => {
       const mesmoUsuario = conta.usuario === this.nomeUsuario;

@@ -101,27 +101,40 @@ export class LoginPage {
   }
 
   async verificarEmailCadastrado() {
-    if (!this.emailRecuperacao) {
+    // 1. Limpa espaços em branco e formata para letras minúsculas
+    const emailLimpo = this.emailRecuperacao.trim().toLowerCase();
+
+    if (!emailLimpo) {
       await this.exibirToast('Por favor, insira o e-mail.', 'warning');
       return;
     }
 
+    // 2. Busca no LocalStorage usando .toLowerCase() para evitar erros de digitação
     const usuariosCadastrados = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
-    const usuarioExiste = usuariosCadastrados.find((u: any) => u.email === this.emailRecuperacao);
+    const usuarioExiste = usuariosCadastrados.find((u: any) => u.email.toLowerCase() === emailLimpo);
 
-    if (!usuarioExiste) {
-      await this.exibirToast('Este e-mail não está cadastrado no sistema.', 'danger');
-      return;
-    }
+    // Nota explicativa: Se o e-mail não estiver na lista local, nós não o bloqueamos imediatamente,
+    // pois ele pode ter se cadastrado diretamente via Provedor Google Auth.
+    // Deixamos o próprio Firebase validar o envio.
 
     try {
-      await this.authService.redefinirSenha(this.emailRecuperacao);
-      await this.exibirToast('E-mail de redefinição enviado! Verifique sua caixa de entrada.', 'success');
+      // 3. Chama o serviço de redefinição nativo do Firebase
+      await this.authService.redefinirSenha(emailLimpo);
+      await this.exibirToast('E-mail de redefinição enviado! Verifique sua caixa de entrada e spam.', 'success');
+      
       this.emailRecuperacao = '';
       this.passoLogin = 'login';
     } catch (error: any) {
-      console.error(error);
-      await this.exibirToast('Erro ao enviar e-mail de recuperação. Tente novamente.', 'danger');
+      console.error('Erro ao recuperar senha:', error);
+      
+      // 4. Se o Firebase retornar explicitamente que o usuário não existe no sistema
+      if (error.code === 'auth/user-not-found') {
+        await this.exibirToast('Este e-mail não está cadastrado no sistema.', 'danger');
+      } else if (error.code === 'auth/invalid-email') {
+        await this.exibirToast('O formato do e-mail inserido é inválido.', 'danger');
+      } else {
+        await this.exibirToast('Erro ao enviar e-mail de recuperação. Verifique a conexão e tente novamente.', 'danger');
+      }
     }
   }
 

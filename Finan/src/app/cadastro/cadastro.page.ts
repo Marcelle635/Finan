@@ -19,6 +19,7 @@ import { AuthService } from '../services/auth';
 import { ContasService } from '../services/contas.service';
 import { addIcons } from 'ionicons';
 import { mailOutline, lockClosedOutline, personOutline } from 'ionicons/icons';
+import { updateProfile } from '@angular/fire/auth'; // 👈 IMPORTANTE: Importação necessária para atualizar o perfil
 
 @Component({
   selector: 'app-cadastro',
@@ -64,30 +65,34 @@ export class CadastroPage {
       return;
     }
 
- try {
-      // 1. Cadastra nas tabelas de autenticação do Firebase
-      await this.authService.cadastrar(this.usuario.email, this.usuario.senha);
+    try {
+      // 1. Cadastra nas tabelas de autenticação do Firebase e guarda a credencial gerada
+      const credencial = await this.authService.cadastrar(this.usuario.email, this.usuario.senha);
       
-      // 2. Alinha o service para não prender o nome fixo global antes da hora
-      this.contasService.salvarUsuario(this.usuario.nome);
+      // 🔥 SOLUÇÃO: Grava o nome digitado diretamente dentro do displayName do Firebase
+      if (credencial && credencial.user) {
+        await updateProfile(credencial.user, {
+          displayName: this.usuario.nome.trim()
+        });
+      }
+      
+      // 2. Alinha o service para salvar o nome localmente
+      this.contasService.salvarUsuario(this.usuario.nome.trim());
 
       // 3. EVITA DUPLICADOS: Busca e limpa qualquer rastro antigo desse e-mail no LocalStorage
       let usuariosLocais = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
       
-      // Filtra e remove qualquer cadastro antigo que use o mesmo e-mail (evita pegar o nome errado)
       usuariosLocais = usuariosLocais.filter((u: any) => u.email.toLowerCase() !== this.usuario.email.toLowerCase());
       
-      // Adiciona o usuário atualizado com e-mail padronizado em minúsculo
       usuariosLocais.push({
         nome: this.usuario.nome.trim(),
         email: this.usuario.email.toLowerCase().trim(),
         senha: this.usuario.senha 
       });
       
-      // 👇 CORRIGIDO AQUI: Alterado de usuariosLocales para usuariosLocais
       localStorage.setItem('app_usuarios_cadastrados', JSON.stringify(usuariosLocais));
 
-      // Força o usuario_logado a ser VOCÊ logo após o cadastro
+      // Força o usuario_logado inicial
       localStorage.setItem('usuario_logado', this.usuario.nome.trim());
 
       this.exibirToast('Cadastro realizado com sucesso!', 'success');

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core'; 
+import { Component, OnInit, OnDestroy, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -62,7 +62,7 @@ import {
     IonModal
   ]
 })
-export class DesejosPage implements OnInit {
+export class DesejosPage implements OnInit, OnDestroy {
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
@@ -117,32 +117,44 @@ export class DesejosPage implements OnInit {
 
   ngOnInit() {
     this.inicializarSeletorData();
-    this.carregarDados();
+    
+    // MONITORAMENTO EM TEMPO REAL: Garante atualização caso mude de conta logada
+    if (this.authService.obterAuth) {
+      this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
+        this.carregarDados(firebaseUser);
+      });
+    } else {
+      this.carregarDados(null);
+    }
   }
 
   ionViewWillEnter() {
-    this.carregarDados();
+    const firebaseUser = this.authService.obterAuth?.currentUser;
+    this.carregarDados(firebaseUser);
   }
 
-  carregarDados() {
-    const usuarioLogadoApp = localStorage.getItem('usuario_logado');
-    const nomeLocalService = this.contasService.buscarUsuario();
-    const firebaseUser = this.authService.obterAuth.currentUser;
+  ngOnDestroy() {
+    // Hooks de encerramento de ciclo limpos
+  }
+
+  carregarDados(firebaseUser: any | null = null) {
+    const nomeLocal = this.contasService.buscarUsuario();
     
-    if (usuarioLogadoApp && !usuarioLogadoApp.includes('@')) {
-      this.nomeUsuario = usuarioLogadoApp;
-    } else if (nomeLocalService && !nomeLocalService.includes('@')) {
-      this.nomeUsuario = nomeLocalService;
-    } else if (firebaseUser && firebaseUser.displayName) {
+    // Identificação prioritária unificada com a Home, Entradas e Gráfico
+    if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
+    } else if (nomeLocal && !nomeLocal.includes('@')) {
+      this.nomeUsuario = nomeLocal;
     } else if (firebaseUser && firebaseUser.email) {
       this.nomeUsuario = firebaseUser.email.split('@')[0];
     } else {
       this.nomeUsuario = 'Usuário';
     }
 
-    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+    // Isola e limpa o primeiro nome para exibição na View
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
     
+    // Vincula a chave de foto correspondente ao escopo do usuário ativo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
