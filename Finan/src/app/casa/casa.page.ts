@@ -17,9 +17,10 @@ import {
   IonTabBar, 
   IonTabButton,
   IonModal,
-  ActionSheetController // Importado para criar o menu de opções
+  ActionSheetController 
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
+import { AuthService } from '../services/auth'; // 👈 Injetado para identificar a conta logada do Firebase
 import { addIcons } from 'ionicons';
 import { 
   settings, 
@@ -33,10 +34,11 @@ import {
   homeOutline, 
   trendingUpOutline, 
   heartOutline,
-  imageOutline,     // Ícone para o menu
-  trashOutline,     // Ícone para o menu
-  closeOutline      // Ícone para o menu
+  imageOutline,     
+  trashOutline,     
+  closeOutline      
 } from 'ionicons/icons';
+import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-casa',
@@ -63,6 +65,11 @@ import {
   ]
 })
 export class CasaPage implements OnInit {
+  // Injeções de dependência modernas usando inject
+  private contasService = inject(ContasService);
+  private authService = inject(AuthService);
+  private actionSheetCtrl = inject(ActionSheetController);
+
   nomeUsuario: string = '';
   avatarPadrao: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
   fotoUsuario: string = this.avatarPadrao;
@@ -88,11 +95,7 @@ export class CasaPage implements OnInit {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
-  // Injetando o ActionSheetController no construtor
-  constructor(
-    private contasService: ContasService,
-    private actionSheetCtrl: ActionSheetController
-  ) {
+  constructor() {
     addIcons({ 
       settings,
       settingsOutline, 
@@ -116,6 +119,7 @@ export class CasaPage implements OnInit {
     this.carregarDados();
   }
 
+  // ESSENCIAL: Disparado toda vez que o usuário navega de volta para a Home
   ionViewWillEnter() {
     this.carregarDados();
   }
@@ -145,15 +149,31 @@ export class CasaPage implements OnInit {
     this.carregarDados(); 
   }
 
-  carregarDados() {
-    this.nomeUsuario = this.contasService.buscarUsuario();
-    this.carregarSaldoDasEntradas();
+// Adicione essa variável logo no topo da sua classe (junto com as outras propriedades), se ainda não tiver:
+  primeiroNome: string = '';
 
+  carregarDados() {
+    // 1. Busca o usuário ativo direto do Firebase para garantir a troca de conta
+    const firebaseUser = this.authService.obterAuth.currentUser;
+    
+    if (firebaseUser) {
+      this.nomeUsuario = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || this.contasService.buscarUsuario();
+    } else {
+      this.nomeUsuario = this.contasService.buscarUsuario() || 'Usuário';
+    }
+
+    // 👇 O SEGREDO AQUI: Guardamos o primeiro nome apenas para exibir na tela!
+    // A variável 'this.nomeUsuario' continua intacta com o nome completo para não quebrar os filtros.
+    this.primeiroNome = this.nomeUsuario.trim().split(' ')[0];
+
+    // 2. Sincroniza a foto de perfil baseado na chave dinâmica do usuário completo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
 
+    // 3. Carrega o Saldo e Extrato específicos desse usuário
+    this.carregarSaldoDasEntradas();
+
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    
     this.contas = todasContasGeral.filter((conta: any) => {
       const mesmoUsuario = conta.usuario === this.nomeUsuario;
       return mesmoUsuario && this.isContaNoMesSelecionado(conta.vencimento);
@@ -288,7 +308,6 @@ export class CasaPage implements OnInit {
     this.carregarDados();
   }
 
-  // Abre o menu perguntando se o usuário quer alterar ou remover a imagem
   async dispararSeletorArquivo() {
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Foto de Perfil',
@@ -297,7 +316,7 @@ export class CasaPage implements OnInit {
           text: 'Escolher Nova Foto',
           icon: 'image-outline',
           handler: () => {
-            const elementoInput = document.getElementById('seletorArquivo') as HTMLInputElement;
+            const elementoInput = document.getElementById('seletorArquivoHome') as HTMLInputElement;
             if (elementoInput) {
               elementoInput.click();
             }
