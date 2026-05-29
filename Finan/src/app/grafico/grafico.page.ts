@@ -53,14 +53,12 @@ export class GraficoPage implements OnInit {
   totalEntradas: number = 0;
   exibirSaldo: boolean = false;
 
-  // Variáveis para controlo do seletor de datas e do ano ativo
   dataAncorada: Date = new Date();
   textoMesAno: string = '';
   dataInicioMes: string = '';
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
-  // Estrutura dinâmica que vai armazenar os 12 meses recalculados
   dadosMeses: any[] = [];
 
   constructor(private contasService: ContasService) {
@@ -85,15 +83,33 @@ export class GraficoPage implements OnInit {
 
   ionViewWillEnter() {
     this.inicializarSeletorData(); 
-    this.carregarDados(); // Garante que os dados atualizam sempre que voltas a esta aba
+    this.carregarDados(); 
   }
 
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
     this.fotoUsuario = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
     
+    // Sincroniza dados antigos para garantir que o gráfico não comece zerado
+    this.sincronizarContasAntigas();
+    
     this.calcularTotalEntradasDoUsuario();
-    this.calcularGastosPorMes(); // Calcula os valores reais de cada conta guardada
+    this.calcularGastosPorMes(); 
+  }
+
+  /**
+   * FUNÇÃO DE SEGURANÇA: Se o histórico estiver vazio, ela copia os gastos existentes 
+   * da página inicial para que o gráfico apareça preenchido imediatamente.
+   */
+  sincronizarContasAntigas() {
+    const historicoDefinitivo = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
+    
+    if (historicoDefinitivo.length === 0) {
+      const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+      if (todasContasGeral.length > 0) {
+        localStorage.setItem('app_historico_gastos', JSON.stringify(todasContasGeral));
+      }
+    }
   }
 
   inicializarSeletorData() {
@@ -108,73 +124,53 @@ export class GraficoPage implements OnInit {
 
     this.textoMesAno = `${meses[mesIndex]} de ${ano}`;
     const mesFormatado = String(mesIndex + 1).padStart(2, '0');
-    
-    if (ano === hoje.getFullYear() && mesIndex === hoje.getMonth()) {
-      const diaAtualFormatado = String(hoje.getDate()).padStart(2, '0');
-      this.dataInicioMes = `${diaAtualFormatado}/${mesFormatado}/${ano}`;
-      this.statusMesTexto = 'Mês Atual';
-    } else {
-      this.dataInicioMes = `01/${mesFormatado}/${ano}`;
-      this.statusMesTexto = '';
-    }
+    this.dataInicioMes = `01/${mesFormatado}/${ano}`;
 
     const ultimoDia = new Date(ano, mesIndex + 1, 0).getDate();
     this.dataFimMes = `${String(ultimoDia).padStart(2, '0')}/${mesFormatado}/${ano}`;
+
+    this.statusMesTexto = (ano === hoje.getFullYear() && mesIndex === hoje.getMonth()) ? 'Mês Atual' : '';
   }
 
-  mudarAno(direcao: number) {
-    // Altera o ano ao clicar nas setas laterais e recalcula o gráfico para o novo ano
-    this.dataAncorada.setFullYear(this.dataAncorada.getFullYear() + direcao);
+  mudarMes(direcao: number) {
+    this.dataAncorada.setMonth(this.dataAncorada.getMonth() + direcao);
     this.inicializarSeletorData();
     this.calcularGastosPorMes();
   }
 
-  /**
-   * MÉTODOS DE FILTRO DINÂMICO DE ACORDO COM CADA CONTA
-   */
   calcularGastosPorMes() {
     const nomesMeses = [
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
     
-    // Cores em tons de roxo/lilás para as colunas do gráfico
     const cores = ['#E9C7FF', '#CE8BFF', '#B550FF', '#9E24FF'];
 
-    // Obtém a lista completa e atualizada de contas criadas na página "Casa"
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
+    const historicoDefinitivo = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
     const anoSelecionado = this.dataAncorada.getFullYear();
 
     const resultadoAgrupado = [];
 
-    // Percorre os 12 meses do ano para mapear os gastos de cada um
     for (let i = 0; i < 12; i++) {
-      const contasDoMes = todasContasGeral.filter((conta: any) => {
-        // 1. Verifica se a conta pertence ao utilizador logado
+      const contasDoMes = historicoDefinitivo.filter((conta: any) => {
         if (conta.usuario !== this.nomeUsuario) return false;
+        if (!conta.vencimento) return false;
         
-        // 2. Extrai o Ano e o Mês da data de vencimento (Formato original: YYYY-MM-DD)
-        const [anoStr, mesStr] = conta.vencimento.split('-');
-        const mesmoAnoEMes = Number(anoStr) === anoSelecionado && Number(mesStr) === (i + 1);
+        // Tratamento robusto de string para evitar erros de fuso horário (Timezone)
+        const partes = conta.vencimento.split('-'); // ["2026", "05", "28"]
+        const anoConta = parseInt(partes[0], 10);
+        const mesConta = parseInt(partes[1], 10);
         
+        const mesmoAnoEMes = anoConta === anoSelecionado && mesConta === (i + 1);
         return mesmoAnoEMes;
-
-        /* 💡 DICA DE SUPORTE: 
-          Se quiseres que o gráfico mostre APENAS as contas que já foram pagas 
-          (ignorando as pendentes até que o utilizador as pague), substitui o "return" acima por:
-          
-          return mesmoAnoEMes && conta.status === 'pago';
-        */
       });
 
-      // Soma o valor total líquido de todas as contas válidas encontradas para este mês
       const totalGastoNoMes = contasDoMes.reduce((soma: number, conta: any) => soma + conta.valor, 0);
 
-      // Adiciona o mês estruturado ao array do gráfico
       resultadoAgrupado.push({
         mes: nomesMeses[i],
         gastos: totalGastoNoMes,
-        corFundo: cores[i % cores.length] // Distribui as cores ciclicamente
+        corFundo: cores[i % cores.length] 
       });
     }
 
@@ -195,10 +191,9 @@ export class GraficoPage implements OnInit {
     const todosGastos = this.dadosMeses.map(m => m.gastos);
     const maiorGasto = Math.max(...todosGastos);
     
-    // Evita divisões por zero se não houver gastos registados no ano inteiro
     if (maiorGasto === 0) return 0;
     
-    const alturaMaximaPx = 140; // Limite visual da altura das barras em píxeis
+    const alturaMaximaPx = 140; 
     return (gasto / maiorGasto) * alturaMaximaPx;
   }
 }

@@ -19,12 +19,11 @@ import {
   IonModal 
 } from '@ionic/angular/standalone'; 
 import { ContasService } from '../services/contas.service';
-import { Conta } from '../models/conta.model';
 import { addIcons } from 'ionicons';
 import { 
   settings, 
   settingsOutline, 
-  eyeOutline,       // Adicionado para o estado visível do saldo
+  eyeOutline,      
   eyeOffOutline, 
   chevronBackOutline, 
   chevronForwardOutline, 
@@ -63,12 +62,11 @@ export class CasaPage implements OnInit {
   nomeUsuario: string = '';
   fotoUsuario: string = localStorage.getItem('foto_usuario') || 'https://ionicframework.com/docs/img/demos/avatar.svg';
   
-  contas: any[] = []; // Alterado para mapear dados dinâmicos com a tag usuario
+  contas: any[] = []; 
   contasFiltradas: any[] = [];
   filtroAtivo: 'pago' | 'pendente' | 'vencido' = 'pendente';
   totalGastos: number = 0;
   
-  // MODIFICAÇÕES: Variáveis para controle do Saldo Geral extraído das Entradas
   totalEntradas: number = 0;
   exibirSaldo: boolean = false;
 
@@ -137,22 +135,31 @@ export class CasaPage implements OnInit {
 
   carregarDados() {
     this.nomeUsuario = this.contasService.buscarUsuario();
-    
-    // 1. MODIFICAÇÃO: Carrega e calcula o Saldo Geral vindo exclusivamente das entradas deste usuário
     this.carregarSaldoDasEntradas();
 
-    // 2. MODIFICAÇÃO: Busca os Gastos do LocalStorage Geral filtrando pelo usuário ativo
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    this.contas = todasContasGeral.filter((conta: any) => conta.usuario === this.nomeUsuario);
+    
+    // Filtra por usuário e restringe ao mês selecionado na tela inicial
+    this.contas = todasContasGeral.filter((conta: any) => {
+      const mesmoUsuario = conta.usuario === this.nomeUsuario;
+      return mesmoUsuario && this.isContaNoMesSelecionado(conta.vencimento);
+    });
     
     this.atualizarStatusPorData();
-    this.calcularTotal();
+    this.calcularTotal(); 
     this.filtrar(this.filtroAtivo);
   }
 
-  /**
-   * Busca os registros na chave das entradas e filtra pelo usuário logado para obter o valor somado
-   */
+  isContaNoMesSelecionado(vencimento: string): boolean {
+    if (!vencimento) return false;
+    const [ano, mes] = vencimento.split('-'); 
+    
+    const anoSelecionado = this.dataAncorada.getFullYear();
+    const mesSelecionado = this.dataAncorada.getMonth() + 1; 
+
+    return Number(ano) === anoSelecionado && Number(mes) === mesSelecionado;
+  }
+
   carregarSaldoDasEntradas() {
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
@@ -203,7 +210,6 @@ export class CasaPage implements OnInit {
       return;
     }
 
-    // MODIFICAÇÃO: Vincula o novo gasto ao usuário atual da conta
     const nova = {
       id: Date.now(),
       usuario: this.nomeUsuario, 
@@ -215,10 +221,15 @@ export class CasaPage implements OnInit {
 
     const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     todasContasGeral.push(nova);
-    
-    // Salva na lista centralizada do dispositivo
     localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
     
+    // Salva de forma permanente no histórico que alimenta o gráfico
+    this.salvarNoHistoricoDefinitivo(nova);
+
+    const [anoGasto, mesGasto] = this.novaConta.vencimento.split('-');
+    this.dataAncorada = new Date(Number(anoGasto), Number(mesGasto) - 1, 1);
+    
+    this.inicializarSeletorData();
     this.carregarDados();
     this.abrirModal(false);
   }
@@ -230,11 +241,32 @@ export class CasaPage implements OnInit {
     if (index !== -1) {
       todasContasGeral[index].status = 'pago';
       localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
+      
+      // Atualiza o status também na tabela do histórico permanente
+      this.salvarNoHistoricoDefinitivo(todasContasGeral[index]);
+
       this.carregarDados();
     }
   }
 
+  /**
+   * Banco de dados local permanente para o Gráfico
+   */
+  salvarNoHistoricoDefinitivo(conta: any) {
+    const historicoGeral = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
+    const index = historicoGeral.findIndex((h: any) => h.id === conta.id);
+    
+    if (index !== -1) {
+      historicoGeral[index] = conta; 
+    } else {
+      historicoGeral.push(conta); 
+    }
+    
+    localStorage.setItem('app_historico_gastos', JSON.stringify(historicoGeral));
+  }
+
   excluirConta(id: number) {
+    // Remove apenas do array da tela inicial (Home)
     let todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
     todasContasGeral = todasContasGeral.filter((c: any) => c.id !== id);
     
