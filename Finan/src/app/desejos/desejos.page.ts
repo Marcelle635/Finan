@@ -191,8 +191,10 @@ export class DesejosPage implements OnInit {
   }
 
   calcularTotais() {
-    // Total desejado = Soma de TODOS os itens do usuário
-    this.totalDesejado = this.desejosFiltrados.reduce((acc, item) => acc + item.valor, 0);
+    // MODIFICADO: Total desejado = Soma apenas dos itens que NÃO foram conquistados/comprados ainda
+    this.totalDesejado = this.desejosFiltrados
+      .filter(item => !item.conquistado)
+      .reduce((acc, item) => acc + item.valor, 0);
     
     // Total conquistado = Soma apenas dos itens marcados como true (Conquistado)
     this.totalConquistado = this.desejosFiltrados
