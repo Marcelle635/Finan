@@ -5,10 +5,13 @@ ion-content {
 }
 
 .background-image {
-  background: url('../../assets/pagina.png') no-repeat center center / cover;
+  // A propriedade 'background: url(...)' foi removida daqui e movida para o HTML
   height: 100%;
   width: 100%;
   position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .overlay {
@@ -63,8 +66,8 @@ ion-content {
 }
 
 .btn-cadastrar {
-  --background: #41969e; // Cor verde-água do botão da imagem
-  --background-activated: #357a81;
+  --background: #B04CDE; // ALTERADO: Nova cor Roxa
+  --background-activated: #8e3cb5; // ALTERADO: Roxo um pouco mais escuro para o clique
   --border-radius: 12px;
   --color: white;
   font-weight: bold;
@@ -72,12 +75,13 @@ ion-content {
   margin-top: 20px;
   text-transform: none; // Evita que o texto fique todo em maiúsculo
 }
+
 .links-footer {
   margin-top: 20px;
   text-align: center;
 
   .link-voltar {
-    color: #41969e; // Mesmo tom verde-água/azul do botão de entrar
+    color: #B04CDE; // ALTERADO: Nova cor Roxa para consistência visual
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;

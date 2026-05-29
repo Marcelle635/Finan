@@ -3,9 +3,12 @@ ion-content {
 }
 
 .background-wrapper {
-  background: url('../../assets/pagina.png') no-repeat center center / cover;
+  // Ajustado: background-image removido daqui e passado para o HTML
   height: 100%;
   width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .overlay {
@@ -86,7 +89,8 @@ ion-content {
 }
 
 .btn-entrar {
-  --background: #41969e; 
+  --background: #B04CDE; // CORRIGIDO: Modificado para o Roxo solicitado
+  --background-activated: #8e3cb5; // Cor de clique adaptada
   --color: #fff;
   --border-radius: 12px;
   font-weight: bold;
@@ -95,7 +99,6 @@ ion-content {
   margin-top: 10px;
 }
 
-// Estilização das opções de rodapé (Cadastre-se e Esqueceu a senha)
 .links-footer {
   margin-top: 25px;
   display: flex;
@@ -120,7 +123,7 @@ ion-content {
   }
 
   .link-esqueceu {
-    color: #41969e; // Cor azul/verde água do link de recuperação
+    color: #B04CDE; // CORRIGIDO: Modificado para o Roxo solicitado
     font-weight: 600;
   }
 }
