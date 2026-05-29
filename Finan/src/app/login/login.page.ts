@@ -101,7 +101,6 @@ export class LoginPage {
   }
 
   async verificarEmailCadastrado() {
-    // 1. Limpa espaços em branco e formata para letras minúsculas
     const emailLimpo = this.emailRecuperacao.trim().toLowerCase();
 
     if (!emailLimpo) {
@@ -109,31 +108,34 @@ export class LoginPage {
       return;
     }
 
-    // 2. Busca no LocalStorage usando .toLowerCase() para evitar erros de digitação
     const usuariosCadastrados = JSON.parse(localStorage.getItem('app_usuarios_cadastrados') || '[]');
-    const usuarioExiste = usuariosCadastrados.find((u: any) => u.email.toLowerCase() === emailLimpo);
+    const usuarioEncontrado = usuariosCadastrados.find((u: any) => u.email.toLowerCase() === emailLimpo);
 
-    // Nota explicativa: Se o e-mail não estiver na lista local, nós não o bloqueamos imediatamente,
-    // pois ele pode ter se cadastrado diretamente via Provedor Google Auth.
-    // Deixamos o próprio Firebase validar o envio.
-
-    try {
-      // 3. Chama o serviço de redefinição nativo do Firebase
-      await this.authService.redefinirSenha(emailLimpo);
-      await this.exibirToast('E-mail de redefinição enviado! Verifique sua caixa de entrada e spam.', 'success');
-      
-      this.emailRecuperacao = '';
-      this.passoLogin = 'login';
-    } catch (error: any) {
+    // Melhoria de fluxo: Se o usuário existe localmente mas foi cadastrado via Google, avise-o!
+    if (usuarioEncontrado && usuarioEncontrado.provedor === 'google') {
+      await this.exibirToast('Este e-mail usa a autenticação do Google. Basta clicar em "Continue with Google".', 'info');
+      return;
+    }
+try {
+  await this.authService.redefinirSenha(emailLimpo);
+  
+  // MENSAGEM DO TOAST ATUALIZADA:
+  await this.exibirToast(
+    'Link enviado! Se não vir o e-mail na caixa de entrada em 2 minutos, verifique obrigatoriamente a pasta de SPAM ou LIXO ELETRÔNICO.', 
+    'success'
+  );
+  
+  this.emailRecuperacao = '';
+  this.passoLogin = 'login';
+} catch (error: any) {
       console.error('Erro ao recuperar senha:', error);
       
-      // 4. Se o Firebase retornar explicitamente que o usuário não existe no sistema
       if (error.code === 'auth/user-not-found') {
         await this.exibirToast('Este e-mail não está cadastrado no sistema.', 'danger');
       } else if (error.code === 'auth/invalid-email') {
         await this.exibirToast('O formato do e-mail inserido é inválido.', 'danger');
       } else {
-        await this.exibirToast('Erro ao enviar e-mail de recuperação. Verifique a conexão e tente novamente.', 'danger');
+        await this.exibirToast('Erro ao enviar e-mail. Verifique sua conexão e tente novamente.', 'danger');
       }
     }
   }
@@ -148,7 +150,7 @@ export class LoginPage {
   private async exibirToast(mensagem: string, cor: string) {
     const toast = await this.toastCtrl.create({
       message: mensagem,
-      duration: 3000,
+      duration: 4000, // Aumentado para dar tempo de ler avisos longos
       color: cor
     });
     await toast.present();
