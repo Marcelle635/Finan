@@ -1,29 +1,31 @@
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" scrollY="false">
   <div class="welcome-container">
+    
     <div class="header-section">
-      <!-- Referência ao logo em dr.PNG -->
       <img src="assets/Logo for Finance App 'DreamFinance'.png" alt="DreamFinance Logo" class="logo">
-      
     </div>
 
     <div class="footer-section">
       <h2>Transforme seus planos em realidade, centavo por centavo</h2>
       
       <div class="button-group">
-        <!-- No botão de Cadastre-se da primeira tela -->
-<ion-button 
-  expand="block" 
-  class="btn-purple" 
-  shape="round" 
-  routerLink="/cadastro"> <!-- Adicione esta linha -->
-  Cadastre-se
-</ion-button>
+        <ion-button 
+          expand="block" 
+          class="btn-purple" 
+          shape="round" 
+          routerLink="/cadastro">
+          Cadastre-se
+        </ion-button>
         
-       <!-- Botão de Entrar (agora configurado para ir para LOGIN.PNG) -->
-    <ion-button expand="block" fill="solid" class="btn-gray" shape="round" routerLink="/login">
-      Entrar
-    </ion-button>
+        <ion-button 
+          expand="block" 
+          class="btn-gray" 
+          shape="round" 
+          routerLink="/login">
+          Entrar
+        </ion-button>
       </div>
     </div>
+
   </div>
 </ion-content>

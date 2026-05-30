@@ -1,50 +1,95 @@
-
-:root {
-  --ion-color-primary: #4a148c; /* Roxo escuro do dr.PNG */
-  --ion-color-secondary: #B04CDE; /* Roxo vibrante dos botões */
-  --ion-background-color: #F9F3FB; /* Fundo claro */
+// Se quiser aplicar as variáveis apenas nesta página, use a classe do componente ou :host
+:host {
+  --ion-background-color: #F9F3FB; 
 }
+
 .welcome-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background-color: #F9F3FB; // Cor de fundo da parte clara
+  height: 100vh; // Garante que o container ocupe exatamente a altura da tela inteira
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  overflow: hidden;
 
-  
-  
+  // Seletor para telas grandes (Desktop/Tablet) não esticarem o layout horizontalmente
+  @media (min-width: 450px) {
+    max-width: 450px;
+    border-left: 1px solid #e0e0e0; // Opcional: dá um visual de "tela de celular" no desktop
+    border-right: 1px solid #e0e0e0;
+    height: 100%;
+  }
 
+  // Metade Superior: Roxa
+  .header-section {
+    flex: 1; // Ocupa exatamente 50% da altura disponível
+    background-color: #4a148c; // Cor roxa escura idêntica à imagem
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+
+    .logo {
+      width: 100%;
+      max-width: 240px; // Controla o tamanho máximo da logo para não estourar
+      height: auto;
+      object-fit: contain;
+    }
+  }
+
+  // Metade Inferior: Clara
   .footer-section {
-    flex: 1;
-    padding: 40px 30px;
+    flex: 1; // Ocupa os outros 50% da altura disponível
+    background-color: #F9F3FB; // Fundo claro off-white do design
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-between; // Empurra o texto para cima e os botões para baixo
+    padding: 40px 30px; // Espaçamento interno confortável nas laterais e cantos
+    box-sizing: border-box;
 
     h2 {
       font-size: 1.6rem;
       font-weight: 800;
-      color: #000;
-      text-align: left; // Alinhamento conforme a imagem dr_2
-      line-height: 1.5;
+      color: #000000;
+      text-align: left; 
+      line-height: 1.3;
       margin: 0;
+      margin-top: 10px;
+
+      @media (max-height: 667px) {
+        font-size: 1.35rem; // Adaptação para telas muito pequenas (ex: iPhone SE)
+      }
     }
 
     .button-group {
-      ion-button {
-        height: 45px;
-        margin-bottom: 15px;
-        font-weight: bold;
-        text-transform: none;
+      width: 100%;
+      margin-bottom: 10px;
 
-        &.btn-purple {
-          --background: #B04CDE; // Roxo do botão
-          --color: white;
+      ion-button {
+        height: 52px; 
+        margin-bottom: 16px;
+        font-weight: 700;
+        text-transform: none;
+        font-size: 1rem;
+        margin-left: 0;
+        margin-right: 0;
+
+        &:last-child {
+          margin-bottom: 0; 
         }
 
+        // Estilo customizado do botão "Cadastre-se"
+        &.btn-purple {
+          --background: #B04CDE; 
+          --color: #ffffff;
+          --background-activated: #963bc0; // Efeito de clique
+        }
+
+        // Estilo customizado do botão "Entrar" (Cinza claro com texto escuro)
         &.btn-gray {
-          --background: #BD8FEB; // Cinza do botão entrar
+          --background: #BD8FEB; 
           --color: #080808;
-          margin-bottom: 0;
+          --background-activated: #c5c5c5;
         }
       }
     }
