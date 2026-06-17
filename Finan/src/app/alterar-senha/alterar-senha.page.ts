@@ -9,16 +9,13 @@ import {
   IonTitle, 
   IonButtons, 
   IonBackButton, 
-  IonItem, 
-  IonInput, 
-  IonButton, 
   IonIcon,
   ToastController 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { ContasService } from '../services/contas.service';
-import { AuthService } from '../services/auth'; // 👈 Injetado para sincronizar com o Firebase
+import { AuthService } from '../services/auth';
 
 @Component({
   selector: 'app-alterar-senha',
@@ -34,9 +31,6 @@ import { AuthService } from '../services/auth'; // 👈 Injetado para sincroniza
     IonTitle,
     IonButtons,
     IonBackButton,
-    IonItem,
-    IonInput,
-    IonButton,
     IonIcon
   ]
 })
@@ -50,7 +44,7 @@ export class AlterarSenhaPage implements OnInit {
   exibirConfirmarSenha = false;
 
   private contasService = inject(ContasService);
-  private authService = inject(AuthService); // 👈 Injeção do serviço de autenticação
+  private authService = inject(AuthService);
   private router = inject(Router);
   private toastCtrl = inject(ToastController);
 
@@ -93,7 +87,7 @@ export class AlterarSenhaPage implements OnInit {
 
       await this.exibirToast('Senha alterada com sucesso!', 'success');
       
-      // Limpa os campos e volta para as configurações
+      // Limpa os campos e retorna para a tela de configurações
       this.novaSenha = '';
       this.confirmarNovaSenha = '';
       this.router.navigate(['/configuracoes']);
@@ -101,7 +95,7 @@ export class AlterarSenhaPage implements OnInit {
     } catch (error: any) {
       console.error("ERRO AO ALTERAR SENHA:", error);
       
-      // Tratamento de segurança do Firebase (Sessões antigas exigem login recente para mudar senha)
+      // Tratamento para sessões antigas que exigem login recente
       if (error.code === 'auth/requires-recent-login') {
         await this.exibirToast('Por segurança, faça login novamente antes de alterar a senha.', 'danger');
         localStorage.removeItem('usuario_logado');
