@@ -16,6 +16,11 @@ import {
   IonModal,
   ActionSheetController 
 } from '@ionic/angular/standalone'; 
+
+// Importações do Firebase Firestore e RxJS
+import { Firestore, collection, collectionData, addDoc, doc, deleteDoc, updateDoc, query, where } from '@angular/fire/firestore';
+import { Subscription, combineLatest } from 'rxjs';
+
 import { ContasService } from '../services/contas.service';
 import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
@@ -63,6 +68,7 @@ import {
   ]
 })
 export class DesejosPage implements OnInit, OnDestroy {
+  private firestore = inject(Firestore); // Injeta o banco do Firestore
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
@@ -92,6 +98,9 @@ export class DesejosPage implements OnInit, OnDestroy {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
+  // Inscrição combinada para escutar desejos, contas e entradas em real-time
+  private dadosSubscription!: Subscription;
+
   constructor() {
     addIcons({ 
       settings,
@@ -118,29 +127,33 @@ export class DesejosPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.inicializarSeletorData();
     
-    // MONITORAMENTO EM TEMPO REAL: Garante atualização caso mude de conta logada
     if (this.authService.obterAuth) {
       this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
-        this.carregarDados(firebaseUser);
+        this.configurarUsuario(firebaseUser);
+        this.escutarDadosFirebase();
       });
     } else {
-      this.carregarDados(null);
+      this.configurarUsuario(null);
+      this.escutarDadosFirebase();
     }
   }
 
   ionViewWillEnter() {
     const firebaseUser = this.authService.obterAuth?.currentUser;
-    this.carregarDados(firebaseUser);
+    this.configurarUsuario(firebaseUser);
+    this.escutarDadosFirebase();
   }
 
   ngOnDestroy() {
-    // Hooks de encerramento de ciclo limpos
+    // Cancela a escuta ativa para evitar vazamento de memória e lentidão
+    if (this.dadosSubscription) {
+      this.dadosSubscription.unsubscribe();
+    }
   }
 
-  carregarDados(firebaseUser: any | null = null) {
+  configurarUsuario(firebaseUser: any | null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // Identificação prioritária unificada com a Home, Entradas e Gráfico
     if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (nomeLocal && !nomeLocal.includes('@')) {
@@ -151,33 +164,53 @@ export class DesejosPage implements OnInit, OnDestroy {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola e limpa o primeiro nome para exibição na View
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
     
-    // Vincula a chave de foto correspondente ao escopo do usuário ativo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
-    
-    this.calcularTotalEntradasDoUsuario();
-    this.carregarDesejosDoUsuario(); 
   }
 
-  calcularTotalEntradasDoUsuario() {
-    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
-    const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
-    const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
+  // 🔄 SINCRONIZAÇÃO TRIPLA EM TEMPO REAL
+  escutarDadosFirebase() {
+    if (this.dadosSubscription) {
+      this.dadosSubscription.unsubscribe();
+    }
 
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
-      conta.usuario === this.nomeUsuario && conta.status === 'pago'
-    );
-    const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
+    const desejosRef = collection(this.firestore, 'desejos');
+    const qDesejos = query(desejosRef, where('usuario', '==', this.nomeUsuario));
 
-    this.totalEntradas = somaEntradas - somaGastosPagos;
-  }
+    const entradasRef = collection(this.firestore, 'entradas');
+    const qEntradas = query(entradasRef, where('usuario', '==', this.nomeUsuario));
 
-  alternarVisibilidadeSaldo() {
-    this.exibirSaldo = !this.exibirSaldo;
+    const contasRef = collection(this.firestore, 'contas');
+    const qContas = query(contasRef, where('usuario', '==', this.nomeUsuario));
+
+    // Combina a escuta das 3 coleções simultaneamente
+    this.dadosSubscription = combineLatest([
+      collectionData(qDesejos, { idField: 'id' }),
+      collectionData(qEntradas, { idField: 'id' }),
+      collectionData(qContas, { idField: 'id' })
+    ]).subscribe(([todosDesejos, todasEntradas, todasContas]) => {
+      
+      // 1. Atualiza e renderiza a lista de desejos
+      this.desejosFiltrados = todosDesejos;
+
+      // 2. Recalcula os painéis de resumo (Total Desejado vs Conquistado)
+      this.totalDesejado = todosDesejos
+        .filter((item: any) => !item.conquistado)
+        .reduce((acc, item: any) => acc + (item.valor || 0), 0);
+      
+      this.totalConquistado = todosDesejos
+        .filter((item: any) => item.conquistado)
+        .reduce((acc, item: any) => acc + (item.valor || 0), 0);
+
+      // 3. Recalcula o Saldo Geral do Cabeçalho
+      const somaEntradas = todasEntradas.reduce((acc, entrada) => acc + (entrada['valor'] || 0), 0);
+      const gastosPagos = todasContas.filter((conta: any) => conta.status === 'pago');
+      const somaGastosPagos = gastosPagos.reduce((acc, conta) => acc + (conta['valor'] || 0), 0);
+
+      this.totalEntradas = somaEntradas - somaGastosPagos;
+    });
   }
 
   inicializarSeletorData() {
@@ -211,59 +244,42 @@ export class DesejosPage implements OnInit, OnDestroy {
     }
   }
 
-  carregarDesejosDoUsuario() {
-    const todosDesejosGeral = JSON.parse(localStorage.getItem('app_todas_contas_desejos') || '[]');
-    this.desejosFiltrados = todosDesejosGeral.filter((desejo: any) => desejo.usuario === this.nomeUsuario);
-    this.calcularTotais();
+  alternarVisibilidadeSaldo() {
+    this.exibirSaldo = !this.exibirSaldo;
   }
 
-  salvarDesejosNoStorage(listaLocalAtualizada: any[]) {
-    const todosDesejosGeral = JSON.parse(localStorage.getItem('app_todas_contas_desejos') || '[]');
-    const outrosUsuarios = todosDesejosGeral.filter((desejo: any) => desejo.usuario !== this.nomeUsuario);
-    const bancoAtualizado = [...outrosUsuarios, ...listaLocalAtualizada];
-    localStorage.setItem('app_todas_contas_desejos', JSON.stringify(bancoAtualizado));
-  }
-
-  calcularTotais() {
-    this.totalDesejado = this.desejosFiltrados
-      .filter(item => !item.conquistado)
-      .reduce((acc, item) => acc + item.valor, 0);
-    
-    this.totalConquistado = this.desejosFiltrados
-      .filter(item => item.conquistado)
-      .reduce((acc, item) => acc + item.valor, 0);
-  }
-
-  adicionarDesejo() {
+  // 💾 SALVAR DESEJO NO FIREBASE
+  async adicionarDesejo() {
     if (!this.novoDesejo.titulo || !this.novoDesejo.valor) {
       alert('Preencha todos os campos!');
       return;
     }
 
     const novoItem = {
-      id: Date.now(),
       usuario: this.nomeUsuario, 
       titulo: this.novoDesejo.titulo,
       valor: Number(this.novoDesejo.valor),
       conquistado: false
     };
 
-    this.desejosFiltrados.push(novoItem);
-    this.salvarDesejosNoStorage(this.desejosFiltrados);
-    this.calcularTotais();
+    const desejosRef = collection(this.firestore, 'desejos');
+    await addDoc(desejosRef, novoItem);
+
     this.abrirModal(false);
   }
 
-  alternarStatusDesejo(desejo: any) {
-    desejo.conquistado = !desejo.conquistado;
-    this.salvarDesejosNoStorage(this.desejosFiltrados);
-    this.calcularTotais();
+  // 🔄 ALTERNAR STATUS (COMPREI / CONQUISTADO) NO FIREBASE
+  async alternarStatusDesejo(desejo: any) {
+    const documentoRef = doc(this.firestore, `desejos/${desejo.id}`);
+    await updateDoc(documentoRef, {
+      conquistado: !desejo.conquistado
+    });
   }
 
-  excluirDesejo(id: number) {
-    this.desejosFiltrados = this.desejosFiltrados.filter(d => d.id !== id);
-    this.salvarDesejosNoStorage(this.desejosFiltrados);
-    this.calcularTotais();
+  // ❌ EXCLUIR DESEJO NO FIREBASE
+  async excluirDesejo(id: string) {
+    const documentoRef = doc(this.firestore, `desejos/${id}`);
+    await deleteDoc(documentoRef);
   }
 
   async dispararSeletorArquivo() {

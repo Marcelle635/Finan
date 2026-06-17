@@ -19,6 +19,11 @@ import {
   IonModal,
   ActionSheetController 
 } from '@ionic/angular/standalone'; 
+
+// Importações do Firebase Firestore
+import { Firestore, collection, collectionData, addDoc, doc, updateDoc, deleteDoc, query, where } from '@angular/fire/firestore';
+import { Subscription } from 'rxjs';
+
 import { ContasService } from '../services/contas.service';
 import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
@@ -64,6 +69,7 @@ import {
   ]
 })
 export class CasaPage implements OnInit, OnDestroy {
+  private firestore = inject(Firestore); // Injeta o Firestore configurado no main.ts
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
@@ -94,6 +100,9 @@ export class CasaPage implements OnInit, OnDestroy {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
+  // Guarda a inscrição do banco para evitar vazamento de memória
+  private contasSubscription!: Subscription;
+
   constructor() {
     addIcons({ 
       settings,
@@ -116,23 +125,28 @@ export class CasaPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.inicializarSeletorData();
 
-    // MONITORAMENTO EM TEMPO REAL: Garante atualização imediata do nome se trocar de conta
     if (this.authService.obterAuth) {
       this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
-        this.carregarDados(firebaseUser);
+        this.configurarUsuario(firebaseUser);
+        this.escutarContasFirebase();
       });
     } else {
-      this.carregarDados(null);
+      this.configurarUsuario(null);
+      this.escutarContasFirebase();
     }
   }
 
   ionViewWillEnter() {
     const firebaseUser = this.authService.obterAuth?.currentUser;
-    this.carregarDados(firebaseUser);
+    this.configurarUsuario(firebaseUser);
+    this.escutarContasFirebase();
   }
 
   ngOnDestroy() {
-    // Hooks de encerramento de ciclo limpos
+    // Cancela a escuta do Firebase se mudar de página
+    if (this.contasSubscription) {
+      this.contasSubscription.unsubscribe();
+    }
   }
 
   inicializarSeletorData() {
@@ -157,14 +171,12 @@ export class CasaPage implements OnInit, OnDestroy {
   mudarMes(direcao: number) {
     this.dataAncorada.setMonth(this.dataAncorada.getMonth() + direcao);
     this.inicializarSeletorData();
-    const firebaseUser = this.authService.obterAuth?.currentUser;
-    this.carregarDados(firebaseUser); 
+    this.escutarContasFirebase(); // Recarrega buscando as contas do novo mês
   }
 
-  carregarDados(firebaseUser: any | null) {
+  configurarUsuario(firebaseUser: any | null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // Identificação prioritária e hierárquica do usuário logado
     if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (nomeLocal && !nomeLocal.includes('@')) {
@@ -175,31 +187,36 @@ export class CasaPage implements OnInit, OnDestroy {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola o primeiro nome limpando possíveis espaços duplicados
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
-
-    // Sincroniza a foto de perfil usando o ID nominal exclusivo da conta ativa
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
 
     this.carregarSaldoDasEntradas();
+  }
 
-    // Filtra gastos da conta atual pertinentes apenas ao mês selecionado
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    this.contas = todasContasGeral.filter((conta: any) => {
-      const mesmoUsuario = conta.usuario === this.nomeUsuario;
-      return mesmoUsuario && this.isContaNoMesSelecionado(conta.vencimento);
+  // 🔄 REAL-TIME MÁGICO: Escuta o Firestore filtrando por usuário
+  escutarContasFirebase() {
+    if (this.contasSubscription) {
+      this.contasSubscription.unsubscribe();
+    }
+
+    const contasRef = collection(this.firestore, 'contas');
+    // Busca apenas documentos pertencentes ao usuário logado
+    const q = query(contasRef, where('usuario', '==', this.nomeUsuario));
+
+    this.contasSubscription = collectionData(q, { idField: 'id' }).subscribe((todasContas: any[]) => {
+      // Filtra as contas que pertencem ao mês selecionado na interface
+      this.contas = todasContas.filter((conta: any) => this.isContaNoMesSelecionado(conta.vencimento));
+      
+      this.atualizarStatusPorData();
+      this.calcularTotal(); 
+      this.filtrar(this.filtroAtivo);
     });
-    
-    this.atualizarStatusPorData();
-    this.calcularTotal(); 
-    this.filtrar(this.filtroAtivo);
   }
 
   isContaNoMesSelecionado(vencimento: string): boolean {
     if (!vencimento) return false;
     const [ano, mes] = vencimento.split('-'); 
-    
     const anoSelecionado = this.dataAncorada.getFullYear();
     const mesSelecionado = this.dataAncorada.getMonth() + 1; 
 
@@ -207,15 +224,14 @@ export class CasaPage implements OnInit, OnDestroy {
   }
 
   carregarSaldoDasEntradas() {
+    // Mantido temporariamente do localStorage, mas recomendo passar para o Firebase depois!
     const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
     const entradasDoUsuario = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
     const somaEntradas = entradasDoUsuario.reduce((acc: number, entrada: any) => acc + entrada.valor, 0);
 
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
-      conta.usuario === this.nomeUsuario && conta.status === 'pago'
-    );
-    const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
+    const somaGastosPagos = this.contas
+      .filter(conta => conta.status === 'pago')
+      .reduce((acc: number, conta: any) => acc + conta.valor, 0);
 
     this.totalEntradas = somaEntradas - somaGastosPagos;
   }
@@ -258,14 +274,14 @@ export class CasaPage implements OnInit, OnDestroy {
     }
   }
 
-  adicionarGasto() {
+  // 💾 ADICIONAR NO FIREBASE
+  async adicionarGasto() {
     if (!this.novaConta.titulo || !this.novaConta.valor || !this.novaConta.vencimento) {
       alert('Por favor, preencha todos os campos!');
       return;
     }
 
     const nova = {
-      id: Date.now(),
       usuario: this.nomeUsuario, 
       titulo: this.novaConta.titulo,
       valor: Number(this.novaConta.valor),
@@ -273,54 +289,27 @@ export class CasaPage implements OnInit, OnDestroy {
       status: 'pendente' 
     };
 
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    todasContasGeral.push(nova);
-    localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
-    
-    this.salvarNoHistoricoDefinitivo(nova);
+    // Salva direto na nuvem!
+    const contasRef = collection(this.firestore, 'contas');
+    await addDoc(contasRef, nova);
 
     const [anoGasto, mesGasto] = this.novaConta.vencimento.split('-');
     this.dataAncorada = new Date(Number(anoGasto), Number(mesGasto) - 1, 1);
     
     this.inicializarSeletorData();
-    const firebaseUser = this.authService.obterAuth?.currentUser;
-    this.carregarDados(firebaseUser);
     this.abrirModal(false);
   }
 
-  marcarComoPago(id: number) {
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    const index = todasContasGeral.findIndex((c: any) => c.id === id);
-    
-    if (index !== -1) {
-      todasContasGeral[index].status = 'pago';
-      localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
-      this.salvarNoHistoricoDefinitivo(todasContasGeral[index]);
-      const firebaseUser = this.authService.obterAuth?.currentUser;
-      this.carregarDados(firebaseUser);
-    }
+  // 🆙 ATUALIZAR NO FIREBASE
+  async marcarComoPago(id: string) {
+    const documentoRef = doc(this.firestore, `contas/${id}`);
+    await updateDoc(documentoRef, { status: 'pago' });
   }
 
-  salvarNoHistoricoDefinitivo(conta: any) {
-    const historicoGeral = JSON.parse(localStorage.getItem('app_historico_gastos') || '[]');
-    const index = historicoGeral.findIndex((h: any) => h.id === conta.id);
-    
-    if (index !== -1) {
-      historicoGeral[index] = conta; 
-    } else {
-      historicoGeral.push(conta); 
-    }
-    
-    localStorage.setItem('app_historico_gastos', JSON.stringify(historicoGeral));
-  }
-
-  excluirConta(id: number) {
-    let todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    todasContasGeral = todasContasGeral.filter((c: any) => c.id !== id);
-    
-    localStorage.setItem('app_todas_contas', JSON.stringify(todasContasGeral));
-    const firebaseUser = this.authService.obterAuth?.currentUser;
-    this.carregarDados(firebaseUser);
+  // ❌ DELETAR NO FIREBASE
+  async excluirConta(id: string) {
+    const documentoRef = doc(this.firestore, `contas/${id}`);
+    await deleteDoc(documentoRef);
   }
 
   async dispararSeletorArquivo() {
@@ -361,7 +350,6 @@ export class CasaPage implements OnInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        
         const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
         localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
       };

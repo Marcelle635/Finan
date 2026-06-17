@@ -18,6 +18,11 @@ import {
   IonModal,
   ActionSheetController 
 } from '@ionic/angular/standalone'; 
+
+// Importações do Firebase Firestore
+import { Firestore, collection, collectionData, addDoc, doc, deleteDoc, query, where } from '@angular/fire/firestore';
+import { Subscription, combineLatest } from 'rxjs';
+
 import { ContasService } from '../services/contas.service';
 import { AuthService } from '../services/auth'; 
 import { addIcons } from 'ionicons';
@@ -63,6 +68,7 @@ import {
   ]
 })
 export class EntradasPage implements OnInit, OnDestroy {
+  private firestore = inject(Firestore); // Injeta o banco Firestore
   private contasService = inject(ContasService);
   private authService = inject(AuthService);
   private actionSheetCtrl = inject(ActionSheetController);
@@ -90,6 +96,9 @@ export class EntradasPage implements OnInit, OnDestroy {
   dataFimMes: string = '';
   statusMesTexto: string = '';
 
+  // Inscrição combinada para escutar entradas e contas ao mesmo tempo
+  private dadosSubscription!: Subscription;
+
   constructor() {
     addIcons({ 
       settings,
@@ -112,29 +121,33 @@ export class EntradasPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.inicializarSeletorData();
     
-    // MONITORAMENTO EM TEMPO REAL: Garante atualização imediata se trocar de conta
     if (this.authService.obterAuth) {
       this.authService.obterAuth.onAuthStateChanged((firebaseUser) => {
-        this.carregarDados(firebaseUser);
+        this.configurarUsuario(firebaseUser);
+        this.escutarDadosFirebase();
       });
     } else {
-      this.carregarDados(null);
+      this.configurarUsuario(null);
+      this.escutarDadosFirebase();
     }
   }
 
   ionViewWillEnter() {
     const firebaseUser = this.authService.obterAuth?.currentUser;
-    this.carregarDados(firebaseUser);
+    this.configurarUsuario(firebaseUser);
+    this.escutarDadosFirebase();
   }
 
   ngOnDestroy() {
-    // Hooks de encerramento limpos
+    // Evita vazamento de memória cancelando as escutas em tempo real
+    if (this.dadosSubscription) {
+      this.dadosSubscription.unsubscribe();
+    }
   }
 
-  carregarDados(firebaseUser: any | null) {
+  configurarUsuario(firebaseUser: any | null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // Identificação prioritária baseada na sessão atual do Firebase
     if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (nomeLocal && !nomeLocal.includes('@')) {
@@ -145,20 +158,41 @@ export class EntradasPage implements OnInit, OnDestroy {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola o primeiro nome da string de forma idêntica à Home
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
     
-    // Vincula a foto específica deste usuário logado
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
-    
-    this.carregarEntradasDoUsuario();
   }
 
-  carregarEntradasDoUsuario() {
-    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
-    this.entradasFiltradas = todasEntradas.filter((entrada: any) => entrada.usuario === this.nomeUsuario);
-    this.calcularTotalEntradas();
+  // 🔄 ESCUTA EM TEMPO REAL: Entradas e Contas unificadas para calcular o saldo dinamicamente
+  escutarDadosFirebase() {
+    if (this.dadosSubscription) {
+      this.dadosSubscription.unsubscribe();
+    }
+
+    const entradasRef = collection(this.firestore, 'entradas');
+    const qEntradas = query(entradasRef, where('usuario', '==', this.nomeUsuario));
+
+    const contasRef = collection(this.firestore, 'contas');
+    const qContas = query(contasRef, where('usuario', '==', this.nomeUsuario));
+
+    // O combineLatest garante que se qualquer alteração ocorrer em contas ou entradas, a tela recalcula
+    this.dadosSubscription = combineLatest([
+      collectionData(qEntradas, { idField: 'id' }),
+      collectionData(qContas, { idField: 'id' })
+    ]).subscribe(([todasEntradas, todasContas]) => {
+      
+      // Armazena as entradas obtidas da nuvem
+      this.entradasFiltradas = todasEntradas;
+
+      // Cálculos matemáticos do Saldo Geral atualizado em real-time
+      const somaEntradas = todasEntradas.reduce((acc, entrada) => acc + (entrada['valor'] || 0), 0);
+      
+      const gastosPagosDoUsuario = todasContas.filter((conta: any) => conta.status === 'pago');
+      const somaGastosPagos = gastosPagosDoUsuario.reduce((acc, conta) => acc + (conta['valor'] || 0), 0);
+
+      this.totalEntradas = somaEntradas - somaGastosPagos;
+    });
   }
 
   inicializarSeletorData() {
@@ -183,7 +217,7 @@ export class EntradasPage implements OnInit, OnDestroy {
   mudarMes(direcao: number) {
     this.dataAncorada.setMonth(this.dataAncorada.getMonth() + direcao);
     this.inicializarSeletorData();
-    // Opcional: Se quiser filtrar as entradas por mês no futuro, adicione a chamada de recarga aqui.
+    // Pronto para aplicar filtros mensais na nuvem se você decidir usar datas nas suas entradas futuramente!
   }
 
   abrirModal(abrir: boolean) {
@@ -197,47 +231,30 @@ export class EntradasPage implements OnInit, OnDestroy {
     this.exibirSaldo = !this.exibirSaldo;
   }
 
-  calcularTotalEntradas() {
-    const somaEntradas = this.entradasFiltradas.reduce((acc, entrada) => acc + entrada.valor, 0);
-
-    const todasContasGeral = JSON.parse(localStorage.getItem('app_todas_contas') || '[]');
-    const gastosPagosDoUsuario = todasContasGeral.filter((conta: any) => 
-      conta.usuario === this.nomeUsuario && conta.status === 'pago'
-    );
-    const somaGastosPagos = gastosPagosDoUsuario.reduce((acc: number, conta: any) => acc + conta.valor, 0);
-
-    this.totalEntradas = somaEntradas - somaGastosPagos;
-  }
-
-  adicionarEntrada() {
+  // 💾 ADICIONAR ENTRADA NO FIREBASE
+  async adicionarEntrada() {
     if (!this.novaEntrada.titulo || !this.novaEntrada.valor) {
       alert('Preencha os campos obrigatórios!');
       return;
     }
     
     const novaObjetoEntrada = {
-      id: Date.now(),
       usuario: this.nomeUsuario, 
       titulo: this.novaEntrada.titulo,
       categoria: this.novaEntrada.categoria,
       valor: Number(this.novaEntrada.valor)
     };
 
-    const todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
-    todasEntradas.push(novaObjetoEntrada);
-    
-    localStorage.setItem('app_todas_entradas', JSON.stringify(todasEntradas));
+    const entradasRef = collection(this.firestore, 'entradas');
+    await addDoc(entradasRef, novaObjetoEntrada);
 
-    this.carregarEntradasDoUsuario();
     this.abrirModal(false);
   }
 
-  excluirEntrada(id: number) {
-    let todasEntradas = JSON.parse(localStorage.getItem('app_todas_entradas') || '[]');
-    todasEntradas = todasEntradas.filter((e: any) => e.id !== id);
-    localStorage.setItem('app_todas_entradas', JSON.stringify(todasEntradas));
-
-    this.carregarEntradasDoUsuario();
+  // ❌ DELETAR ENTRADA NO FIREBASE
+  async excluirEntrada(id: string) {
+    const documentoRef = doc(this.firestore, `entradas/${id}`);
+    await deleteDoc(documentoRef);
   }
 
   async dispararSeletorArquivo() {
@@ -278,7 +295,6 @@ export class EntradasPage implements OnInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.fotoUsuario = e.target.result;
-        
         const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
         localStorage.setItem(chaveFotoUsuario, this.fotoUsuario);
       };
