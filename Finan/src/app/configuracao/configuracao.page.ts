@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core'; 
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common'; // Importado o Location do @angular/common
 import { Router, RouterLink } from '@angular/router'; 
 import { 
   IonContent, 
@@ -46,6 +46,7 @@ export class ConfiguracoesPage implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private actionSheetCtrl = inject(ActionSheetController);
+  private location = inject(Location); // Injeção do serviço Location para histórico de rotas
 
   nomeUsuario: string = '';
   primeiroNome: string = ''; 
@@ -104,6 +105,11 @@ export class ConfiguracoesPage implements OnInit, OnDestroy {
     // Sincroniza a chave da foto vinculada estritamente ao usuário ativo
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
+  }
+
+  // Função responsável por retornar à última página visitada no histórico
+  voltar() {
+    this.location.back();
   }
 
   irParaNotificacoes() {
