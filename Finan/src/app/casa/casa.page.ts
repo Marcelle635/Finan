@@ -25,7 +25,7 @@ import { addIcons } from 'ionicons';
 import { 
   settings, 
   settingsOutline, 
-  eyeOutline,      
+  eyeOutline,       
   eyeOffOutline, 
   chevronBackOutline, 
   chevronForwardOutline, 

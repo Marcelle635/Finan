@@ -54,7 +54,11 @@
     </div>
   </div>
 
-  <div class="meses-lista-container">
+  <div *ngIf="!temContasNoAno()" class="sem-dados-container" style="text-align: center; padding: 30px; color: #666;">
+    <p>Nenhuma conta adicionada para este período.</p>
+  </div>
+
+  <div class="meses-lista-container" *ngIf="temContasNoAno()">
     <ng-container *ngFor="let item of dadosMeses">
       <div class="card-mes-acumulado" [style.background]="item.corFundo" *ngIf="item.gastos > 0">
         <span class="nome-mes">{{ item.mes }}</span>
@@ -63,21 +67,23 @@
     </ng-container>
   </div>
 
-  <div class="grafico-geral-container">
+  <div class="grafico-geral-container" *ngIf="temContasNoAno()">
     <h3>Gastos dos meses</h3>
     
     <div class="barras-wrapper" style="overflow-x: auto; display: flex; align-items: flex-end; padding-bottom: 8px;">
-      <div *ngFor="let item of dadosMeses" class="coluna-grafico-item" style="flex: 1; min-width: 45px; display: flex; flex-direction: column; align-items: center;">
-        <div class="barra-preenchimento" 
-             [style.height]="calcularAlturaBarra(item.gastos) + 'px'"
-             [style.background]="item.corFundo"
-             style="width: 24px; border-radius: 4px 4px 0 0; transition: height 0.3s ease-in-out;">
+      <ng-container *ngFor="let item of dadosMeses">
+        <div *ngIf="item.gastos > 0" class="coluna-grafico-item" style="flex: 1; min-width: 45px; display: flex; flex-direction: column; align-items: center;">
+          <div class="barra-preenchimento" 
+               [style.height]="calcularAlturaBarra(item.gastos) + 'px'"
+               [style.background]="item.corFundo"
+               style="width: 24px; border-radius: 4px 4px 0 0; transition: height 0.3s ease-in-out;">
+          </div>
+          <span class="legenda-mes" style="font-size: 0.75rem; margin-top: 6px;">{{ item.mes.substring(0,3) }}</span>
+          <span class="legenda-valor" style="font-size: 0.7rem; font-weight: bold;">
+            {{ item.gastos | currency:'BRL':'symbol':'1.0-0' }}
+          </span>
         </div>
-        <span class="legenda-mes" style="font-size: 0.75rem; margin-top: 6px;">{{ item.mes.substring(0,3) }}</span>
-        <span class="legenda-valor" style="font-size: 0.7rem; font-weight: bold;" *ngIf="item.gastos > 0">
-          {{ item.gastos | currency:'BRL':'symbol':'1.0-0' }}
-        </span>
-      </div>
+      </ng-container>
     </div>
   </div>
 </ion-content>

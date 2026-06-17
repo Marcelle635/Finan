@@ -116,7 +116,6 @@ export class GraficoPage implements OnInit, OnDestroy {
   carregarDados(firebaseUser: any | null = null) {
     const nomeLocal = this.contasService.buscarUsuario();
     
-    // Identificação prioritária e estruturada do usuário ativo
     if (firebaseUser && firebaseUser.displayName) {
       this.nomeUsuario = firebaseUser.displayName;
     } else if (nomeLocal && !nomeLocal.includes('@')) {
@@ -127,10 +126,8 @@ export class GraficoPage implements OnInit, OnDestroy {
       this.nomeUsuario = 'Usuário';
     }
 
-    // Isola e higieniza o primeiro nome para exibição no template
     this.primeiroNome = this.nomeUsuario.trim().split(' ')[0] || 'Usuário';
     
-    // Sincroniza a chave de foto associada ao escopo nominal do usuário logado
     const chaveFotoUsuario = 'foto_' + this.nomeUsuario;
     this.fotoUsuario = localStorage.getItem(chaveFotoUsuario) || this.avatarPadrao;
     
@@ -205,6 +202,12 @@ export class GraficoPage implements OnInit, OnDestroy {
       });
     }
     this.dadosMeses = resultadoAgrupado;
+  }
+
+  // Nova função auxiliar para verificar se o usuário possui alguma conta mapeada no ano corrente
+  temContasNoAno(): boolean {
+    if (!this.dadosMeses) return false;
+    return this.dadosMeses.some(item => item.gastos > 0);
   }
 
   calcularTotalEntradasDoUsuario() {
